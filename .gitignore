@@ -1,0 +1,12 @@
+## .NET build artifacts
+[Bb]in/
+[Oo]bj/
+MyLoginProject/bin/
+MyLoginProject/obj/
+
+## IDE and tools
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs

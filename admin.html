@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פאנל ניהול משתמשים - OSI Simulator</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f1f5f9; padding: 30px; margin: 0; direction: rtl; }
+        .container { max-width: 900px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { color: #1e293b; margin-top: 0; }
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        button.btn-refresh { background-color: #6366f1; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button.btn-refresh:hover { background-color: #4f46e5; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #e2e8f0; padding: 12px 15px; text-align: right; }
+        th { background-color: #f8fafc; color: #475569; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .btn-delete { background-color: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+        .btn-delete:hover { background-color: #dc2626; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+        .badge-success { background-color: #dcfce7; color: #166534; }
+        .badge-warning { background-color: #fef9c3; color: #854d0e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-actions">
+            <h1>פאנל ניהול - משתמשי המערכת</h1>
+            <button class="btn-refresh" onclick="loadUsers()">↻ רענן נתונים</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>שם מלא</th>
+                    <th>אימייל</th>
+                    <th>סטטוס אימות</th>
+                    <th>פעולות</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody">
+                <tr><td colspan="5">טוען נתונים...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_BASE = window.location.port === '5025' ? '' : 'http://localhost:5025';
+
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/users`);
+                const users = await response.json();
+                
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '';
+
+                if (users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5">אין משתמשים רשומים במערכת.</td></tr>';
+                    return;
+                }
+
+                users.forEach(user => {
+                    const statusBadge = user.isVerified 
+                        ? '<span class="badge badge-success">✓ מאומת</span>' 
+                        : '<span class="badge badge-warning">⏳ ממתין לאימות</span>';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.fullname || '-'}</td>
+                            <td>${user.email}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <button class="btn-delete" onclick="deleteUser(${user.id})">מחק משתמש</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm(`האם אתה בטוח שברצונך למחוק את משתמש #${id}?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/users/${id}`, { method: 'DELETE' });
+                const result = await response.json();
+                alert(result.message);
+                loadUsers();
+            } catch (error) {
+                alert('שגיאה במחיקת המשתמש');
+            }
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>

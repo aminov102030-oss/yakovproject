@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <title>הרשמה - סימולטור OSI</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+        }
+        .main-card {
+            display: flex;
+            width: 950px;
+            height: 600px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .form-side {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .form-side p.subtitle {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            width: 100%;
+            margin-bottom: 12px;
+            text-align: right;
+        }
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] { 
+            width: 100%; 
+            padding: 11px 15px; 
+            background: #f8fafc;
+            border: 1px solid #e2e8f0; 
+            border-radius: 10px; 
+            font-size: 14px; 
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus { 
+            border-color: #6366f1; 
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        .extra-links {
+            width: 100%;
+            display: flex;
+            justify-content: flex-start;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        .extra-links a {
+            color: #6366f1;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .extra-links a:hover { text-decoration: underline; }
+        .checkbox-group {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #334155;
+            text-align: right;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #6366f1;
+            cursor: pointer;
+        }
+        .checkbox-group a {
+            color: #6366f1;
+            text-decoration: underline;
+        }
+        button.submit-btn { 
+            width: 100%; 
+            padding: 11px; 
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-size: 15px; 
+            font-weight: bold;
+            margin-top: 5px;
+            transition: 0.3s;
+        }
+        button.submit-btn:hover { opacity: 0.9; }
+        .logo-side {
+            flex: 1;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .logo-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            color: white;
+            width: 80%;
+            height: 75%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .logo-box h1 { font-size: 32px; margin: 0 0 10px 0; }
+        .logo-box p { color: rgba(255, 255, 255, 0.8); font-size: 14px; margin: 0; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="main-card">
+        <div class="form-side">
+            <p class="subtitle" id="form-subtitle">SIMULATOR REGISTER</p>
+            
+            <!-- שלב 1: מילוי פרטי הרשמה -->
+            <div id="registerFields" style="width: 100%;">
+                <div class="input-group">
+                    <input type="text" id="fullname" placeholder="שם מלא" required />
+                </div>
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="אימייל / שם משתמש" required />
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="סיסמה" required />
+                </div>
+                <div class="input-group">
+                    <input type="password" id="confirmPassword" placeholder="אימות סיסמה" required />
+                </div>
+
+                <div class="extra-links">
+                    <a href="login.html">יש לך כבר חשבון? התחבר כאן</a>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="termsCheckbox" required />
+                    <label for="termsCheckbox">אני מאשר/ת את <a href="#" target="_blank">תנאי השימוש ומדיניות הפרטיות</a></label>
+                </div>
+                
+                <button class="submit-btn" id="registerBtn" onclick="register()">צור חשבון חדש</button>
+            </div>
+
+            <!-- שלב 2: אימות קוד במייל -->
+            <div id="verificationFields" class="hidden" style="width: 100%;">
+                <p style="font-size: 14px; color: #475569; margin-bottom: 15px;">קוד אימות בן 4 ספרות נשלח לכתובת המייל שלך.<br>הזן אותו להשלמת יצירת החשבון:</p>
+                <div class="input-group">
+                    <input type="text" id="verificationCode" placeholder="הכנס את קוד האימות שנשלח למייל" required />
+                </div>
+                <div class="extra-links" style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <a onclick="resendCode()" style="color: #6366f1;">שלח קוד שוב</a>
+                    <a onclick="backToRegister()" style="color: #64748b;">חזרה לפרטים</a>
+                </div>
+                <button class="submit-btn" id="verifyBtn" onclick="verifyRegistration()">אמת קוד והפעל חשבון</button>
+            </div>
+        </div>
+
+        <div class="logo-side">
+            <div class="logo-box">
+                <h1>OSI Simulator</h1>
+                <p>מערכת ניהול ובקרת תקשורת רשתות</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.port === '5025' ? '' : 'http://localhost:5025';
+        let savedEmail = "";
+
+        async function register() {
+            const fullname = document.getElementById('fullname').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const termsChecked = document.getElementById('termsCheckbox').checked;
+            const registerBtn = document.getElementById('registerBtn');
+
+            if (!termsChecked) {
+                alert("חובה לאשר את תנאי השימוש ומדיניות הפרטיות.");
+                return;
+            }
+            if (!fullname || !email || !password) {
+                alert("נא למלא את כל שדות החובה.");
+                return;
+            }
+            if (password !== confirmPassword) {
+                alert("הסיסמאות אינן תואמות.");
+                return;
+            }
+
+            registerBtn.disabled = true;
+            registerBtn.innerText = "שולח קוד אימות למייל...";
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullname, email, password })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    savedEmail = email;
+                    alert(data.message || "קוד אימות נשלח לתיבת המייל שלך!");
+                    document.getElementById('registerFields').classList.add('hidden');
+                    document.getElementById('verificationFields').classList.remove('hidden');
+                    document.getElementById('form-subtitle').innerText = "אימות חשבון - הזן את הקוד מהמייל";
+                } else {
+                    alert(data.message || "שגיאה ביצירת החשבון.");
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert("שגיאת תקשורת עם השרת.");
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.innerText = "צור חשבון חדש";
+            }
+        }
+
+        async function verifyRegistration() {
+            const code = document.getElementById('verificationCode').value.trim();
+            const verifyBtn = document.getElementById('verifyBtn');
+
+            if (!code) {
+                alert("נא להזין את קוד האימות שהתקבל במייל.");
+                return;
+            }
+
+            verifyBtn.disabled = true;
+            verifyBtn.innerText = "מאמת קוד...";
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/verify-registration`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: savedEmail, code })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message || "החשבון אומת והופעל בהצלחה!");
+                    window.location.href = 'login.html';
+                } else {
+                    alert(data.message || "קוד אימות שגוי. נסה שוב.");
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert("שגיאת תקשורת עם השרת.");
+            } finally {
+                verifyBtn.disabled = false;
+                verifyBtn.innerText = "אמת קוד והפעל חשבון";
+            }
+        }
+
+        async function resendCode() {
+            if (!savedEmail) return;
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/resend-code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: savedEmail })
+                });
+                const data = await response.json();
+                alert(data.message || "קוד אימות חדש נשלח למייל שלך.");
+            } catch (error) {
+                alert("שגיאה בשליחת קוד חוזר.");
+            }
+        }
+
+        function backToRegister() {
+            document.getElementById('verificationFields').classList.add('hidden');
+            document.getElementById('registerFields').classList.remove('hidden');
+            document.getElementById('form-subtitle').innerText = "SIMULATOR REGISTER";
+        }
+    </script>
+</body>
+</html>

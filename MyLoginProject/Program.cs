@@ -46,7 +46,20 @@ string HashPassword(string password)
 // בדיקת התאמת סיסמה ל-Hash שנשמר במסד הנתונים
 bool VerifyPassword(string password, string hashedPassword)
 {
-    return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+    if (string.IsNullOrEmpty(hashedPassword)) return false;
+
+    // בדיקה אם ה-Hash נוצר ב-BCrypt
+    if (hashedPassword.StartsWith("$2a$") || hashedPassword.StartsWith("$2b$") || hashedPassword.StartsWith("$2y$") || hashedPassword.StartsWith("$2x$"))
+    {
+        try { return BCrypt.Net.BCrypt.Verify(password, hashedPassword); }
+        catch { return false; }
+    }
+
+    // תמיכה לאחור ב-SHA256 עבור משתמשים שנרשמו קודם
+    using var sha256 = SHA256.Create();
+    var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+    var shaHash = Convert.ToHexString(bytes).ToLower();
+    return shaHash.Equals(hashedPassword, StringComparison.OrdinalIgnoreCase);
 }
 
 // שליחת מייל אימות דרך Brevo SMTP עם הסתרת מפתחות

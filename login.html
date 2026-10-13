@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <title>התחברות - סימולטור OSI</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+        }
+        .main-card {
+            display: flex;
+            width: 950px;
+            height: 600px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .form-side {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .form-side p.subtitle {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            width: 100%;
+            margin-bottom: 12px;
+            text-align: right;
+        }
+        input[type="email"],
+        input[type="password"] { 
+            width: 100%; 
+            padding: 11px 15px; 
+            background: #f8fafc;
+            border: 1px solid #e2e8f0; 
+            border-radius: 10px; 
+            font-size: 14px; 
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus { 
+            border-color: #6366f1; 
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        .extra-links {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        .extra-links a {
+            color: #6366f1;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .extra-links a:hover { text-decoration: underline; }
+        .checkbox-group {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #334155;
+            text-align: right;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #6366f1;
+            cursor: pointer;
+        }
+        .checkbox-group a {
+            color: #6366f1;
+            text-decoration: underline;
+        }
+        button.submit-btn { 
+            width: 100%; 
+            padding: 11px; 
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-size: 15px; 
+            font-weight: bold;
+            margin-top: 5px;
+            transition: 0.3s;
+        }
+        button.submit-btn:hover { opacity: 0.9; }
+        .logo-side {
+            flex: 1;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .logo-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            color: white;
+            width: 80%;
+            height: 75%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .logo-box h1 { font-size: 32px; margin: 0 0 10px 0; }
+        .logo-box p { color: rgba(255, 255, 255, 0.8); font-size: 14px; margin: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="main-card">
+        <div class="form-side">
+            <p class="subtitle">SIMULATOR LOGIN</p>
+            
+            <div class="input-group">
+                <input type="email" id="email" placeholder="אימייל / שם משתמש" required />
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="סיסמה" required />
+            </div>
+
+            <div class="extra-links">
+                <a href="register.html">אין לך חשבון? הירשם כאן</a>
+                <a href="fpassword.html">שכחת סיסמה?</a>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="rememberMe" />
+                <label for="rememberMe">לזכור אותי במערכת זו</label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="termsCheckbox" required />
+                <label for="termsCheckbox">אני מאשר/ת את <a href="#" target="_blank">תנאי השימוש ומדיניות הפרטיות</a></label>
+            </div>
+            
+            <button class="submit-btn" onclick="login()">התחבר עכשיו</button>
+        </div>
+
+        <div class="logo-side">
+            <div class="logo-box">
+                <h1>OSI Simulator</h1>
+                <p>מערכת ניהול ובקרת תקשורת רשתות</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.port === '5025' ? '' : 'http://localhost:5025';
+
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const termsChecked = document.getElementById('termsCheckbox').checked;
+
+            if (!termsChecked) {
+                alert("חובה לאשר את תנאי השימוש ומדיניות הפרטיות לפני ההתחברות.");
+                return;
+            }
+            if (!email || !password) {
+                alert("נא למלא את כל שדות החובה.");
+                return;
+            }
+
+            fetch(`${API_BASE}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || "התחברת בהצלחה!");
+                    window.location.href = '/dashboard';
+                } else {
+                    alert(data.message || "שגיאה בפרטי ההתחברות.");
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
