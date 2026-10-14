@@ -2,9 +2,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Net;
 using System.Net.Mail;
+using System.Net.Sockets;
+using System.Collections.Concurrent;
 using Npgsql;
-using Microsoft.AspNetCore.SignalR; // הוסף עבור Sockets/SignalR
-using BCrypt.Net; // הוסף עבור הצפנת סיסמאות
+using Microsoft.AspNetCore.SignalR;
+using BCrypt.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +23,10 @@ builder.Services.AddCors(options =>
 
 // הוספת שירותי SignalR לסוקטים
 builder.Services.AddSignalR();
+
+// רישום שירות ה-TCP כ-Singleton וכ-Background Service
+builder.Services.AddSingleton<TcpServerService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<TcpServerService>());
 
 var app = builder.Build();
 
@@ -396,10 +402,65 @@ app.MapDelete("/api/admin/users/{id:int}", async (int id) =>
     return Results.NotFound(new { success = false, message = "המשתמש לא נמצא." });
 });
 
+// ────────────────────────────────────────────────
+// 10. TCP Server – סטטוס
+// ────────────────────────────────────────────────
+app.MapGet("/api/tcp/status", (TcpServerService tcpService) =>
+{
+    return Results.Ok(new
+    {
+        running = tcpService.IsRunning,
+        port    = tcpService.Port,
+        clients = tcpService.ConnectedClients,
+        log     = tcpService.GetLog()
+    });
+});
+
+// 11. TCP Server – הפעלה
+app.MapPost("/api/tcp/start", (TcpServerService tcpService) =>
+{
+    if (tcpService.IsRunning)
+        return Results.BadRequest(new { success = false, message = "שרת ה-TCP כבר פועל." });
+
+    tcpService.Start();
+    return Results.Ok(new { success = true, message = $"שרת TCP הופעל על פורט {tcpService.Port}." });
+});
+
+// 12. TCP Server – עצירה
+app.MapPost("/api/tcp/stop", (TcpServerService tcpService) =>
+{
+    if (!tcpService.IsRunning)
+        return Results.BadRequest(new { success = false, message = "שרת ה-TCP אינו פועל." });
+
+    tcpService.Stop();
+    return Results.Ok(new { success = true, message = "שרת ה-TCP נעצר." });
+});
+
+// 13. TCP Server – שליחת הודעה לכל הלקוחות המחוברים
+app.MapPost("/api/tcp/send", async (TcpSendRequest req, TcpServerService tcpService) =>
+{
+    if (!tcpService.IsRunning)
+        return Results.BadRequest(new { success = false, message = "שרת ה-TCP אינו פועל." });
+
+    if (string.IsNullOrWhiteSpace(req.Message))
+        return Results.BadRequest(new { success = false, message = "ההודעה ריקה." });
+
+    int sent = await tcpService.BroadcastAsync(req.Message);
+    return Results.Ok(new { success = true, message = $"ההודעה נשלחה ל-{sent} לקוח/לקוחות." });
+});
+
+// 14. WebSocket (TCP-Client) – חיבור ושליחה דרך SignalR מהדפדפן
+// הדפדפן מתחבר לדף tcp.html, לוחץ 'שלח' –> SignalR Hub שולח ל-TCP server.
+
 #endregion
 
 // הגדרת נתיב (Endpoint) לסוקטים של סימולטור ה-OSI
 app.MapHub<OsiHub>("/osihub");
+
+// הזרקת HubContext לשירות ה-TCP כדי שיוכל לשדר ל-WebSocket
+var tcpService = app.Services.GetRequiredService<TcpServerService>();
+var hubContext = app.Services.GetRequiredService<IHubContext<OsiHub>>();
+tcpService.SetHubContext(hubContext);
 
 app.Run();
 
@@ -436,15 +497,182 @@ void InitDatabase(string cs)
 
 #endregion
 
-#region --- מחלקת ה-Hub עבור SignalR ---
+#region --- SignalR Hub (WebSocket) ---
 
-// מחלקה זו מנהלת את התקשורת החיה מול ה-HTML
+/// <summary>
+/// Hub ראשי לסימולטור OSI – מאפשר תקשורת WebSocket דו-כיוונית עם הדפדפן.
+/// גם מגשר בין הדפדפן לשרת ה-TCP הפנימי.
+/// </summary>
 public class OsiHub : Hub
 {
+    private readonly TcpServerService _tcpService;
+
+    public OsiHub(TcpServerService tcpService)
+    {
+        _tcpService = tcpService;
+    }
+
+    // שידור חבילת OSI לכל הדפדפנים המחוברים
     public async Task SendPacket(string layerName, string data)
     {
-        // משדר את הנתונים לכל משתמשי הסימולטור המחוברים ברגע זה
         await Clients.All.SendAsync("ReceivePacket", layerName, data);
+    }
+
+    // שליחת הודעה מהדפדפן אל שרת ה-TCP, ובחזרה לכל הדפדפנים
+    public async Task SendToTcp(string message)
+    {
+        string timestamp = DateTime.Now.ToString("HH:mm:ss");
+        // שולח לשרת TCP
+        if (_tcpService.IsRunning)
+        {
+            int sent = await _tcpService.BroadcastAsync(message);
+            await Clients.All.SendAsync("TcpLog", $"[{timestamp}] [SERVER→TCP] שלחתי ל-{sent} לקוח/לקוחות: {message}");
+        }
+        else
+        {
+            await Clients.Caller.SendAsync("TcpLog", $"[{timestamp}] [שגיאה] שרת ה-TCP אינו פועל.");
+        }
+    }
+}
+
+#endregion
+
+#region --- TCP Server Service (Background) ---
+
+/// <summary>
+/// שירות רקע שמפעיל TcpListener על פורט 9000.
+/// כל לקוח TCP שמתחבר מוצג בדף tcp.html דרך SignalR.
+/// </summary>
+public class TcpServerService : BackgroundService
+{
+    private TcpListener? _listener;
+    private readonly ConcurrentDictionary<string, TcpClient> _clients = new();
+    private readonly List<string> _log = new();
+    private readonly object _logLock = new();
+    private IHubContext<OsiHub>? _hubContext;
+    private bool _isRunning;
+
+    public int Port { get; } = 9000;
+    public bool IsRunning => _isRunning;
+    public int ConnectedClients => _clients.Count;
+
+    public void SetHubContext(IHubContext<OsiHub> hubContext) => _hubContext = hubContext;
+
+    public List<string> GetLog()
+    {
+        lock (_logLock) return _log.TakeLast(50).ToList();
+    }
+
+    private void AddLog(string entry)
+    {
+        string line = $"[{DateTime.Now:HH:mm:ss}] {entry}";
+        lock (_logLock) { _log.Add(line); }
+        _hubContext?.Clients.All.SendAsync("TcpLog", line);
+        Console.WriteLine($"[TCP] {line}");
+    }
+
+    public void Start()
+    {
+        if (_isRunning) return;
+        _listener = new TcpListener(IPAddress.Any, Port);
+        _listener.Start();
+        _isRunning = true;
+        AddLog($"שרת TCP הופעל ומאזין על פורט {Port}.");
+        _ = AcceptLoopAsync();
+    }
+
+    public void Stop()
+    {
+        _isRunning = false;
+        _listener?.Stop();
+        foreach (var (id, client) in _clients)
+        {
+            client.Close();
+        }
+        _clients.Clear();
+        AddLog("שרת TCP נעצר. כל החיבורים נסגרו.");
+    }
+
+    private async Task AcceptLoopAsync()
+    {
+        while (_isRunning && _listener != null)
+        {
+            try
+            {
+                var client = await _listener.AcceptTcpClientAsync();
+                string id = Guid.NewGuid().ToString("N")[..8];
+                _clients[id] = client;
+                string remote = client.Client.RemoteEndPoint?.ToString() ?? "לא ידוע";
+                AddLog($"לקוח חדש התחבר [{id}] מ-{remote}. סה\"כ: {_clients.Count}");
+                _ = HandleClientAsync(id, client);
+            }
+            catch { break; }
+        }
+    }
+
+    private async Task HandleClientAsync(string id, TcpClient client)
+    {
+        try
+        {
+            using var stream = client.GetStream();
+            var buffer = new byte[4096];
+
+            // שליחת ברכה ללקוח החדש
+            var welcome = Encoding.UTF8.GetBytes($"ברוך הבא ל-OSI Simulator TCP Server! [Session: {id}]\n");
+            await stream.WriteAsync(welcome);
+
+            while (client.Connected && _isRunning)
+            {
+                int bytesRead = await stream.ReadAsync(buffer);
+                if (bytesRead == 0) break;
+
+                string message = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
+                AddLog($"[{id}] קיבלתי: {message}");
+
+                // Echo – שולח את ההודעה חזרה
+                var echo = Encoding.UTF8.GetBytes($"[Echo] {message}\n");
+                await stream.WriteAsync(echo);
+            }
+        }
+        catch (Exception ex)
+        {
+            AddLog($"[{id}] שגיאה: {ex.Message}");
+        }
+        finally
+        {
+            _clients.TryRemove(id, out _);
+            client.Close();
+            AddLog($"לקוח [{id}] התנתק. סה\"כ: {_clients.Count}");
+        }
+    }
+
+    public async Task<int> BroadcastAsync(string message)
+    {
+        var bytes = Encoding.UTF8.GetBytes(message + "\n");
+        int sent = 0;
+        foreach (var (id, client) in _clients)
+        {
+            try
+            {
+                await client.GetStream().WriteAsync(bytes);
+                sent++;
+            }
+            catch
+            {
+                _clients.TryRemove(id, out _);
+            }
+        }
+        if (sent > 0) AddLog($"[Broadcast] נשלח ל-{sent} לקוחות: {message}");
+        return sent;
+    }
+
+    // BackgroundService – הפעלה אוטומטית בעת הפעלת השרת
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        // ממתין עד שה-App מוכן ולוקח את HubContext
+        await Task.Delay(500, stoppingToken);
+        AddLog("TcpServerService מוכן (ממתין להפעלה ידנית דרך /api/tcp/start).");
+        await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 }
 
@@ -459,5 +687,6 @@ record LoginRequest(string Email, string Password);
 record ForgotPasswordRequest(string Email);
 record VerifyResetCodeRequest(string Email, string Code);
 record ResetPasswordRequest(string Email, string Code, string NewPassword);
+record TcpSendRequest(string Message);
 
 #endregion
