@@ -254,11 +254,40 @@
 
     </div>
 
-    <!-- SignalR - local file (no CDN dependency) -->
-    <script src="/signalr.min.js"></script>
+    <!-- SignalR: מנסה קובץ מקומי, אם לא נמצא - CDN -->
+    <script>
+        (function() {
+            function loadScript(src, onSuccess, onFail) {
+                var s = document.createElement('script');
+                s.src = src;
+                s.onload = onSuccess;
+                s.onerror = onFail;
+                document.head.appendChild(s);
+            }
+
+            var cdnSrc = 'https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js';
+            // כשנכנסים דרך Live Server (5500) צריך את הקובץ יחסית לתיקיית השורש
+            var localSrc = 'signalr.min.js';
+
+            loadScript(localSrc, function() {
+                // קובץ מקומי נטען בהצלחה
+                initApp();
+            }, function() {
+                // מקומי נכשל – נסה CDN
+                loadScript(cdnSrc, function() {
+                    initApp();
+                }, function() {
+                    document.body.innerHTML = '<div style="color:#f87171;padding:40px;font-size:16px;font-family:Arial">'
+                        + '❌ לא ניתן לטעון SignalR.<br><br>'
+                        + 'פתח את הדף ישירות מהשרת: <a href="http://localhost:5025/tcp.html" style="color:#38bdf8;">http://localhost:5025/tcp.html</a>'
+                        + '</div>';
+                });
+            });
+        })();
+    </script>
 
     <script>
-        // ── תמיכה ב-Live Server (5500) ובשרת ASP.NET (5025) ──
+        function initApp() {
         const API_BASE = (window.location.port === '5025' || window.location.port === '')
             ? ''
             : 'http://localhost:5025';
@@ -459,6 +488,7 @@
         // Init
         startWs();
         setInterval(refreshStatus, 4000);
+        } // end initApp
     </script>
 </body>
 </html>
