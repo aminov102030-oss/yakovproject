@@ -80,6 +80,11 @@
                 });
             } catch (error) {
                 console.error('Error fetching users:', error);
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = `<tr><td colspan="5" style="color: #ef4444; text-align: center; font-weight: bold; padding: 20px;">
+                    ❌ שגיאת חיבור לשרת (${API_BASE || 'פורט מקומי'}).<br>
+                    <span style="font-size: 13px; font-weight: normal; color: #64748b;">ודא ששרת ה-ASP.NET פעיל ברקע באמצעות 'dotnet run'.</span>
+                </td></tr>`;
             }
         }
 
