@@ -44,7 +44,7 @@
             align-items: center;
             gap: 8px;
         }
-        .card h2 .badge {
+        .badge {
             font-size: 11px;
             padding: 2px 8px;
             border-radius: 20px;
@@ -65,6 +65,7 @@
             border-radius: 50%;
             background: #ef4444;
             transition: background 0.3s;
+            flex-shrink: 0;
         }
         .dot.on { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
         .btn-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -77,7 +78,7 @@
             cursor: pointer;
             transition: opacity 0.2s;
         }
-        button:hover { opacity: 0.85; }
+        button:hover:not(:disabled) { opacity: 0.85; }
         button:disabled { opacity: 0.4; cursor: not-allowed; }
         .btn-green  { background: #22c55e; color: #fff; }
         .btn-red    { background: #ef4444; color: #fff; }
@@ -138,22 +139,23 @@
             padding: 14px;
             font-size: 12px;
             color: #93c5fd;
-            line-height: 1.7;
+            line-height: 1.9;
         }
         .info-box code {
             background: rgba(0,0,0,0.4);
             padding: 1px 6px;
             border-radius: 4px;
             font-family: 'Courier New', monospace;
+            color: #e2e8f0;
         }
-        .ws-status {
+        .ws-badge {
             font-size: 12px;
             padding: 4px 10px;
             border-radius: 20px;
             background: rgba(239,68,68,0.2);
             color: #f87171;
         }
-        .ws-status.connected {
+        .ws-badge.connected {
             background: rgba(34,197,94,0.2);
             color: #86efac;
         }
@@ -166,13 +168,13 @@
 
     <div class="grid">
 
-        <!-- כרטיס TCP Server -->
+        <!-- TCP Server Card -->
         <div class="card">
             <h2>🖥️ TCP Server <span class="badge badge-tcp">Port 9000</span></h2>
 
             <div class="status-row">
                 <div class="dot" id="tcpDot"></div>
-                <span id="tcpStatus">כבוי</span>
+                <span id="tcpStatus">בודק...</span>
             </div>
 
             <div class="stats">
@@ -191,37 +193,37 @@
             </div>
 
             <div class="btn-row">
-                <button class="btn-green" id="btnStart" onclick="startServer()">▶ הפעל שרת</button>
-                <button class="btn-red"   id="btnStop"  onclick="stopServer()" disabled>■ עצור שרת</button>
+                <button class="btn-green" id="btnStart" onclick="startServer()" disabled>▶ הפעל שרת</button>
+                <button class="btn-red"   id="btnStop"  onclick="stopServer()"  disabled>■ עצור שרת</button>
                 <button class="btn-blue"  onclick="refreshStatus()">↻ רענן</button>
             </div>
 
             <div class="input-row">
-                <input type="text" id="broadcastMsg" placeholder="הודעה לשידור לכל הלקוחות..." />
+                <input type="text" id="broadcastMsg" placeholder="הודעה לשידור לכל הלקוחות המחוברים..." />
                 <button class="btn-blue" onclick="broadcastMessage()">📡 שלח</button>
             </div>
 
             <div class="info-box">
                 <b>איך להתחבר לשרת TCP:</b><br>
-                מ-Terminal: <code>telnet localhost 9000</code><br>
-                או: <code>nc localhost 9000</code><br>
-                השרת מחזיר Echo אוטומטי לכל הודעה.
+                PowerShell: <code>Test-NetConnection localhost -Port 9000</code><br>
+                או דרך WebSocket בכרטיס הימני ←<br>
+                השרת שולח Echo אוטומטי לכל הודעה שמתקבלת.
             </div>
         </div>
 
-        <!-- כרטיס WebSocket -->
+        <!-- WebSocket Card -->
         <div class="card">
             <h2>⚡ WebSocket (SignalR) <span class="badge badge-ws">Live</span></h2>
 
             <div class="status-row">
                 <div class="dot" id="wsDot"></div>
                 <span id="wsStatusText">מתחבר...</span>
-                <span class="ws-status" id="wsStatusBadge">מנותק</span>
+                <span class="ws-badge" id="wsStatusBadge">מנותק</span>
             </div>
 
-            <p style="font-size:12px; color:#94a3b8; margin-bottom:14px;">
-                חיבור WebSocket ישיר בין הדפדפן לשרת ASP.NET Core.
-                כל אירוע TCP מוצג כאן בזמן אמת.
+            <p style="font-size:12px; color:#94a3b8; margin-bottom:14px; line-height:1.6;">
+                חיבור WebSocket דו-כיווני בזמן אמת בין הדפדפן לשרת.<br>
+                כל אירוע TCP (חיבור / הודעה / ניתוק) מוצג כאן מיידית.
             </p>
 
             <div class="input-row">
@@ -234,61 +236,91 @@
             </div>
 
             <div class="log-box" id="wsLog">
-                <span class="entry-info">ממתין לחיבור WebSocket...</span>
+                <div class="entry-info">ממתין לחיבור WebSocket...</div>
             </div>
         </div>
 
-        <!-- לוג TCP Server - רוחב מלא -->
+        <!-- TCP Log - Full Width -->
         <div class="card full-width">
             <h2>📋 לוג שרת TCP (Real-time)</h2>
             <div class="btn-row">
                 <button class="btn-blue" onclick="clearLog('tcpLog')">🗑 נקה לוג</button>
-                <button class="btn-blue" onclick="loadTcpLog()">↻ טען לוג</button>
+                <button class="btn-blue" onclick="loadTcpLog()">↻ טען לוג מלא</button>
             </div>
             <div class="log-box" id="tcpLog">
-                <span class="entry-info">הלוג יופיע כאן בזמן אמת...</span>
+                <div class="entry-info">הלוג יופיע כאן בזמן אמת עם הפעלת השרת...</div>
             </div>
         </div>
 
     </div>
 
-    <!-- SignalR Client Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <!-- SignalR - local file (no CDN dependency) -->
+    <script src="/signalr.min.js"></script>
 
     <script>
-        const API_BASE = window.location.port === '5025' ? '' : 'http://localhost:5025';
-        let msgReceived = 0, msgSent = 0;
+        // ── תמיכה ב-Live Server (5500) ובשרת ASP.NET (5025) ──
+        const API_BASE = (window.location.port === '5025' || window.location.port === '')
+            ? ''
+            : 'http://localhost:5025';
 
-        // ════════════════════════════════════
-        //  WebSocket – SignalR
-        // ════════════════════════════════════
+        let msgReceived = 0, msgSent = 0;
+        let wsReady = false;
+
+        // ════════════════════════════════
+        //  SignalR – WebSocket
+        // ════════════════════════════════
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl(`${API_BASE}/osihub`)
-            .withAutomaticReconnect()
+            .withUrl(`${API_BASE}/osihub`, {
+                skipNegotiation: false,
+                transport: signalR.HttpTransportType.WebSockets
+                        | signalR.HttpTransportType.LongPolling
+            })
+            .withAutomaticReconnect([0, 1000, 3000, 5000])
+            .configureLogging(signalR.LogLevel.Warning)
             .build();
 
-        connection.on("TcpLog", (message) => {
-            appendLog('tcpLog', message);
-            appendLog('wsLog', `📡 [TCP→WS] ${message}`, 'entry-server');
+        // TCP לוג מהשרת – מגיע בזמן אמת
+        connection.on('TcpLog', (msg) => {
+            const cls = msg.includes('שגיאה') || msg.includes('ERROR') ? 'entry-error'
+                      : msg.includes('התחבר') ? 'entry-info'
+                      : msg.includes('Broadcast') || msg.includes('קיבלתי') ? 'entry-server'
+                      : 'entry-default';
+            appendLog('tcpLog', msg, cls);
+            appendLog('wsLog', `📡 ${msg}`, 'entry-server');
             msgReceived++;
             document.getElementById('statMessages').textContent = msgReceived;
+            refreshStatus();
         });
 
-        connection.on("ReceivePacket", (layer, data) => {
-            appendLog('wsLog', `📦 [OSI] Layer: ${layer} | ${data}`, 'entry-client');
+        connection.on('ReceivePacket', (layer, data) => {
+            appendLog('wsLog', `📦 [OSI] ${layer}: ${data}`, 'entry-client');
         });
 
-        connection.onreconnecting(() => setWsStatus(false, 'מתחבר מחדש...'));
-        connection.onreconnected(() => setWsStatus(true, 'מחובר'));
-        connection.onclose(() => setWsStatus(false, 'מנותק'));
+        connection.onreconnecting(() => {
+            setWsStatus(false, 'מתחבר מחדש...');
+            wsReady = false;
+        });
+        connection.onreconnected(() => {
+            setWsStatus(true, 'מחובר');
+            wsReady = true;
+            refreshStatus();
+        });
+        connection.onclose((err) => {
+            setWsStatus(false, 'מנותק');
+            wsReady = false;
+            appendLog('wsLog', `❌ חיבור נסגר. ${err || ''}`, 'entry-error');
+        });
 
         async function startWs() {
             try {
                 await connection.start();
+                wsReady = true;
                 setWsStatus(true, 'מחובר');
                 appendLog('wsLog', '✅ WebSocket מחובר בהצלחה!', 'entry-info');
-                refreshStatus();
+                await refreshStatus();
+                await loadTcpLog();
             } catch (err) {
+                wsReady = false;
                 setWsStatus(false, 'שגיאת חיבור');
                 appendLog('wsLog', `❌ שגיאה: ${err}`, 'entry-error');
                 setTimeout(startWs, 3000);
@@ -306,45 +338,63 @@
 
         async function wsSendToTcp() {
             const msg = document.getElementById('wsMsg').value.trim();
-            if (!msg) return;
-            await connection.invoke('SendToTcp', msg);
-            appendLog('wsLog', `📤 [שלחתי] ${msg}`, 'entry-client');
-            document.getElementById('wsMsg').value = '';
-            msgSent++;
-            document.getElementById('statSent').textContent = msgSent;
+            if (!msg || !wsReady) return;
+            try {
+                await connection.invoke('SendToTcp', msg);
+                appendLog('wsLog', `📤 [שלחתי] ${msg}`, 'entry-client');
+                document.getElementById('wsMsg').value = '';
+                msgSent++;
+                document.getElementById('statSent').textContent = msgSent;
+            } catch (err) {
+                appendLog('wsLog', `❌ שגיאה בשליחה: ${err}`, 'entry-error');
+            }
         }
 
-        // ════════════════════════════════════
-        //  TCP Server – API calls
-        // ════════════════════════════════════
+        // ════════════════════════════════
+        //  TCP API
+        // ════════════════════════════════
         async function startServer() {
-            const res = await fetch(`${API_BASE}/api/tcp/start`, { method: 'POST' });
-            const data = await res.json();
-            appendLog('tcpLog', data.message, data.success ? 'entry-info' : 'entry-error');
-            await refreshStatus();
+            document.getElementById('btnStart').disabled = true;
+            try {
+                const res = await fetch(`${API_BASE}/api/tcp/start`, { method: 'POST' });
+                const data = await res.json();
+                appendLog('tcpLog', data.message, data.success ? 'entry-info' : 'entry-error');
+                await refreshStatus();
+            } catch(e) {
+                appendLog('tcpLog', `❌ שגיאה: ${e}`, 'entry-error');
+            }
         }
 
         async function stopServer() {
-            const res = await fetch(`${API_BASE}/api/tcp/stop`, { method: 'POST' });
-            const data = await res.json();
-            appendLog('tcpLog', data.message, data.success ? 'entry-info' : 'entry-error');
-            await refreshStatus();
+            document.getElementById('btnStop').disabled = true;
+            try {
+                const res = await fetch(`${API_BASE}/api/tcp/stop`, { method: 'POST' });
+                const data = await res.json();
+                appendLog('tcpLog', data.message, data.success ? 'entry-info' : 'entry-error');
+                await refreshStatus();
+            } catch(e) {
+                appendLog('tcpLog', `❌ שגיאה: ${e}`, 'entry-error');
+            }
         }
 
         async function broadcastMessage() {
             const msg = document.getElementById('broadcastMsg').value.trim();
             if (!msg) return;
-            const res = await fetch(`${API_BASE}/api/tcp/send`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: msg })
-            });
-            const data = await res.json();
-            appendLog('tcpLog', data.message, data.success ? 'entry-info' : 'entry-error');
-            if (data.success) {
-                document.getElementById('broadcastMsg').value = '';
-                msgSent++;
-                document.getElementById('statSent').textContent = msgSent;
+            try {
+                const res = await fetch(`${API_BASE}/api/tcp/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg })
+                });
+                const data = await res.json();
+                appendLog('tcpLog', data.message, data.success ? 'entry-info' : 'entry-error');
+                if (data.success) {
+                    document.getElementById('broadcastMsg').value = '';
+                    msgSent++;
+                    document.getElementById('statSent').textContent = msgSent;
+                }
+            } catch(e) {
+                appendLog('tcpLog', `❌ שגיאה: ${e}`, 'entry-error');
             }
         }
 
@@ -355,11 +405,15 @@
                 const running = data.running;
 
                 document.getElementById('tcpDot').classList.toggle('on', running);
-                document.getElementById('tcpStatus').textContent = running ? `פועל על פורט ${data.port}` : 'כבוי';
+                document.getElementById('tcpStatus').textContent = running
+                    ? `פועל ✅ פורט ${data.port} | ${data.clients} מחוברים`
+                    : 'כבוי ⭕';
                 document.getElementById('btnStart').disabled = running;
                 document.getElementById('btnStop').disabled = !running;
                 document.getElementById('statClients').textContent = data.clients;
-            } catch {}
+            } catch {
+                document.getElementById('tcpStatus').textContent = 'שגיאת חיבור לשרת ❌';
+            }
         }
 
         async function loadTcpLog() {
@@ -368,13 +422,19 @@
                 const data = await res.json();
                 const box = document.getElementById('tcpLog');
                 box.innerHTML = '';
-                (data.log || []).forEach(l => appendLog('tcpLog', l));
-            } catch {}
+                if (data.log && data.log.length > 0) {
+                    data.log.forEach(l => appendLog('tcpLog', l));
+                } else {
+                    appendLog('tcpLog', 'אין פריטים בלוג עדיין.', 'entry-info');
+                }
+            } catch(e) {
+                appendLog('tcpLog', `❌ שגיאה בטעינת הלוג: ${e}`, 'entry-error');
+            }
         }
 
-        // ════════════════════════════════════
+        // ════════════════════════════════
         //  Helpers
-        // ════════════════════════════════════
+        // ════════════════════════════════
         function appendLog(boxId, text, cls = 'entry-default') {
             const box = document.getElementById(boxId);
             const line = document.createElement('div');
@@ -388,13 +448,17 @@
             document.getElementById(boxId).innerHTML = '';
         }
 
-        // Enter key support
-        document.getElementById('broadcastMsg').addEventListener('keydown', e => { if (e.key === 'Enter') broadcastMessage(); });
-        document.getElementById('wsMsg').addEventListener('keydown', e => { if (e.key === 'Enter') wsSendToTcp(); });
+        // Enter key
+        document.getElementById('broadcastMsg').addEventListener('keydown', e => {
+            if (e.key === 'Enter') broadcastMessage();
+        });
+        document.getElementById('wsMsg').addEventListener('keydown', e => {
+            if (e.key === 'Enter') wsSendToTcp();
+        });
 
         // Init
         startWs();
-        setInterval(refreshStatus, 5000);
+        setInterval(refreshStatus, 4000);
     </script>
 </body>
 </html>

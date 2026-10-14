@@ -21,8 +21,12 @@ builder.Services.AddCors(options =>
     });
 });
 
-// הוספת שירותי SignalR לסוקטים
-builder.Services.AddSignalR();
+// הוספת שירותי SignalR עם תמיכה ב-WebSockets, SSE ו-LongPolling
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+    options.MaximumReceiveMessageSize = 102400;
+});
 
 // רישום שירות ה-TCP כ-Singleton וכ-Background Service
 builder.Services.AddSingleton<TcpServerService>();
@@ -30,6 +34,8 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<TcpServerService>(
 
 var app = builder.Build();
 
+// WebSockets חייב להיות לפני CORS ו-SignalR
+app.UseWebSockets();
 app.UseCors();
 app.UseDefaultFiles();
 app.UseStaticFiles();
