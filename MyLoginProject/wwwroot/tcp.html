@@ -76,9 +76,9 @@
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: 0.2s;
         }
-        button:hover:not(:disabled) { opacity: 0.85; }
+        button:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
         button:disabled { opacity: 0.4; cursor: not-allowed; }
         .btn-green  { background: #22c55e; color: #fff; }
         .btn-red    { background: #ef4444; color: #fff; }
@@ -174,7 +174,7 @@
 
             <div class="status-row">
                 <div class="dot" id="tcpDot"></div>
-                <span id="tcpStatus">בודק...</span>
+                <span id="tcpStatus">טוען סטטוס...</span>
             </div>
 
             <div class="stats">
@@ -193,8 +193,8 @@
             </div>
 
             <div class="btn-row">
-                <button class="btn-green" id="btnStart" onclick="startServer()" disabled>▶ הפעל שרת</button>
-                <button class="btn-red"   id="btnStop"  onclick="stopServer()"  disabled>■ עצור שרת</button>
+                <button class="btn-green" id="btnStart" onclick="startServer()">▶ הפעל שרת</button>
+                <button class="btn-red"   id="btnStop"  onclick="stopServer()" disabled>■ עצור שרת</button>
                 <button class="btn-blue"  onclick="refreshStatus()">↻ רענן</button>
             </div>
 
@@ -204,10 +204,11 @@
             </div>
 
             <div class="info-box">
-                <b>איך להתחבר לשרת TCP:</b><br>
-                PowerShell: <code>Test-NetConnection localhost -Port 9000</code><br>
-                או דרך WebSocket בכרטיס הימני ←<br>
-                השרת שולח Echo אוטומטי לכל הודעה שמתקבלת.
+                <b>איך לבדוק שהסוקט עובד:</b><br>
+                1. לחץ למעלה <b>▶ הפעל שרת</b>.<br>
+                2. פתח PowerShell והרץ:<br>
+                <code>$c = New-Object System.Net.Sockets.TcpClient("localhost", 9000)</code><br>
+                השרת ישלח ברכה ויחזיר Echo לכל הודעה שתשלח!
             </div>
         </div>
 
@@ -248,167 +249,66 @@
                 <button class="btn-blue" onclick="loadTcpLog()">↻ טען לוג מלא</button>
             </div>
             <div class="log-box" id="tcpLog">
-                <div class="entry-info">הלוג יופיע כאן בזמן אמת עם הפעלת השרת...</div>
+                <div class="entry-info">הלוג יופיע כאן בזמן אמת...</div>
             </div>
         </div>
 
     </div>
 
-    <!-- SignalR: מנסה קובץ מקומי, אם לא נמצא - CDN -->
     <script>
-        (function() {
-            function loadScript(src, onSuccess, onFail) {
-                var s = document.createElement('script');
-                s.src = src;
-                s.onload = onSuccess;
-                s.onerror = onFail;
-                document.head.appendChild(s);
-            }
-
-            var cdnSrc = 'https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js';
-            // כשנכנסים דרך Live Server (5500) צריך את הקובץ יחסית לתיקיית השורש
-            var localSrc = 'signalr.min.js';
-
-            loadScript(localSrc, function() {
-                // קובץ מקומי נטען בהצלחה
-                initApp();
-            }, function() {
-                // מקומי נכשל – נסה CDN
-                loadScript(cdnSrc, function() {
-                    initApp();
-                }, function() {
-                    document.body.innerHTML = '<div style="color:#f87171;padding:40px;font-size:16px;font-family:Arial">'
-                        + '❌ לא ניתן לטעון SignalR.<br><br>'
-                        + 'פתח את הדף ישירות מהשרת: <a href="http://localhost:5025/tcp.html" style="color:#38bdf8;">http://localhost:5025/tcp.html</a>'
-                        + '</div>';
-                });
-            });
-        })();
-    </script>
-
-    <script>
-        function initApp() {
+        // תמיכה ב-Live Server (פורט 5500) ושרת ASP.NET (פורט 5025)
         const API_BASE = (window.location.port === '5025' || window.location.port === '')
             ? ''
             : 'http://localhost:5025';
 
-        let msgReceived = 0, msgSent = 0;
+        let msgReceived = 0;
+        let msgSent = 0;
         let wsReady = false;
+        let signalRConnection = null;
 
-        // ════════════════════════════════
-        //  SignalR – WebSocket
-        // ════════════════════════════════
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl(`${API_BASE}/osihub`, {
-                skipNegotiation: false,
-                transport: signalR.HttpTransportType.WebSockets
-                        | signalR.HttpTransportType.LongPolling
-            })
-            .withAutomaticReconnect([0, 1000, 3000, 5000])
-            .configureLogging(signalR.LogLevel.Warning)
-            .build();
+        // ──────────────────────────────────────────────
+        //  פונקציות שרת TCP (זמינות מיידית ללחיצה בכפתורים)
+        // ──────────────────────────────────────────────
 
-        // TCP לוג מהשרת – מגיע בזמן אמת
-        connection.on('TcpLog', (msg) => {
-            const cls = msg.includes('שגיאה') || msg.includes('ERROR') ? 'entry-error'
-                      : msg.includes('התחבר') ? 'entry-info'
-                      : msg.includes('Broadcast') || msg.includes('קיבלתי') ? 'entry-server'
-                      : 'entry-default';
-            appendLog('tcpLog', msg, cls);
-            appendLog('wsLog', `📡 ${msg}`, 'entry-server');
-            msgReceived++;
-            document.getElementById('statMessages').textContent = msgReceived;
-            refreshStatus();
-        });
-
-        connection.on('ReceivePacket', (layer, data) => {
-            appendLog('wsLog', `📦 [OSI] ${layer}: ${data}`, 'entry-client');
-        });
-
-        connection.onreconnecting(() => {
-            setWsStatus(false, 'מתחבר מחדש...');
-            wsReady = false;
-        });
-        connection.onreconnected(() => {
-            setWsStatus(true, 'מחובר');
-            wsReady = true;
-            refreshStatus();
-        });
-        connection.onclose((err) => {
-            setWsStatus(false, 'מנותק');
-            wsReady = false;
-            appendLog('wsLog', `❌ חיבור נסגר. ${err || ''}`, 'entry-error');
-        });
-
-        async function startWs() {
-            try {
-                await connection.start();
-                wsReady = true;
-                setWsStatus(true, 'מחובר');
-                appendLog('wsLog', '✅ WebSocket מחובר בהצלחה!', 'entry-info');
-                await refreshStatus();
-                await loadTcpLog();
-            } catch (err) {
-                wsReady = false;
-                setWsStatus(false, 'שגיאת חיבור');
-                appendLog('wsLog', `❌ שגיאה: ${err}`, 'entry-error');
-                setTimeout(startWs, 3000);
-            }
-        }
-
-        function setWsStatus(connected, text) {
-            document.getElementById('wsDot').classList.toggle('on', connected);
-            document.getElementById('wsStatusText').textContent = text;
-            const badge = document.getElementById('wsStatusBadge');
-            badge.textContent = connected ? 'מחובר' : 'מנותק';
-            badge.classList.toggle('connected', connected);
-            document.getElementById('btnWsSend').disabled = !connected;
-        }
-
-        async function wsSendToTcp() {
-            const msg = document.getElementById('wsMsg').value.trim();
-            if (!msg || !wsReady) return;
-            try {
-                await connection.invoke('SendToTcp', msg);
-                appendLog('wsLog', `📤 [שלחתי] ${msg}`, 'entry-client');
-                document.getElementById('wsMsg').value = '';
-                msgSent++;
-                document.getElementById('statSent').textContent = msgSent;
-            } catch (err) {
-                appendLog('wsLog', `❌ שגיאה בשליחה: ${err}`, 'entry-error');
-            }
-        }
-
-        // ════════════════════════════════
-        //  TCP API
-        // ════════════════════════════════
         async function startServer() {
-            document.getElementById('btnStart').disabled = true;
+            const btn = document.getElementById('btnStart');
+            btn.disabled = true;
+            btn.textContent = "מפעיל...";
             try {
                 const res = await fetch(`${API_BASE}/api/tcp/start`, { method: 'POST' });
                 const data = await res.json();
                 appendLog('tcpLog', data.message, data.success ? 'entry-info' : 'entry-error');
                 await refreshStatus();
-            } catch(e) {
-                appendLog('tcpLog', `❌ שגיאה: ${e}`, 'entry-error');
+            } catch (err) {
+                appendLog('tcpLog', `❌ שגיאה בהפעלת שרת: ${err.message}`, 'entry-error');
+                btn.disabled = false;
+            } finally {
+                btn.textContent = "▶ הפעל שרת";
             }
         }
 
         async function stopServer() {
-            document.getElementById('btnStop').disabled = true;
+            const btn = document.getElementById('btnStop');
+            btn.disabled = true;
+            btn.textContent = "עוצר...";
             try {
                 const res = await fetch(`${API_BASE}/api/tcp/stop`, { method: 'POST' });
                 const data = await res.json();
                 appendLog('tcpLog', data.message, data.success ? 'entry-info' : 'entry-error');
                 await refreshStatus();
-            } catch(e) {
-                appendLog('tcpLog', `❌ שגיאה: ${e}`, 'entry-error');
+            } catch (err) {
+                appendLog('tcpLog', `❌ שגיאה בעצירת שרת: ${err.message}`, 'entry-error');
+                btn.disabled = false;
+            } finally {
+                btn.textContent = "■ עצור שרת";
             }
         }
 
         async function broadcastMessage() {
-            const msg = document.getElementById('broadcastMsg').value.trim();
+            const input = document.getElementById('broadcastMsg');
+            const msg = input.value.trim();
             if (!msg) return;
+
             try {
                 const res = await fetch(`${API_BASE}/api/tcp/send`, {
                     method: 'POST',
@@ -418,12 +318,12 @@
                 const data = await res.json();
                 appendLog('tcpLog', data.message, data.success ? 'entry-info' : 'entry-error');
                 if (data.success) {
-                    document.getElementById('broadcastMsg').value = '';
+                    input.value = '';
                     msgSent++;
                     document.getElementById('statSent').textContent = msgSent;
                 }
-            } catch(e) {
-                appendLog('tcpLog', `❌ שגיאה: ${e}`, 'entry-error');
+            } catch (err) {
+                appendLog('tcpLog', `❌ שגיאה בשידור: ${err.message}`, 'entry-error');
             }
         }
 
@@ -435,13 +335,15 @@
 
                 document.getElementById('tcpDot').classList.toggle('on', running);
                 document.getElementById('tcpStatus').textContent = running
-                    ? `פועל ✅ פורט ${data.port} | ${data.clients} מחוברים`
+                    ? `פועל ומאזין ✅ (פורט ${data.port} | ${data.clients} לקוחות)`
                     : 'כבוי ⭕';
+
                 document.getElementById('btnStart').disabled = running;
                 document.getElementById('btnStop').disabled = !running;
                 document.getElementById('statClients').textContent = data.clients;
-            } catch {
-                document.getElementById('tcpStatus').textContent = 'שגיאת חיבור לשרת ❌';
+            } catch (err) {
+                document.getElementById('tcpStatus').textContent = 'שגיאת חיבור ל-Backend (ודא ש-dotnet run רץ) ❌';
+                document.getElementById('btnStart').disabled = false;
             }
         }
 
@@ -452,20 +354,51 @@
                 const box = document.getElementById('tcpLog');
                 box.innerHTML = '';
                 if (data.log && data.log.length > 0) {
-                    data.log.forEach(l => appendLog('tcpLog', l));
+                    data.log.forEach(line => appendLog('tcpLog', line));
                 } else {
-                    appendLog('tcpLog', 'אין פריטים בלוג עדיין.', 'entry-info');
+                    appendLog('tcpLog', 'אין רשומות בלוג עדיין.', 'entry-info');
                 }
-            } catch(e) {
-                appendLog('tcpLog', `❌ שגיאה בטעינת הלוג: ${e}`, 'entry-error');
+            } catch (err) {
+                appendLog('tcpLog', `❌ שגיאה בטעינת הלוג: ${err.message}`, 'entry-error');
             }
         }
 
-        // ════════════════════════════════
-        //  Helpers
-        // ════════════════════════════════
+        // ──────────────────────────────────────────────
+        //  פונקציות WebSocket / SignalR
+        // ──────────────────────────────────────────────
+
+        function setWsStatus(connected, text) {
+            document.getElementById('wsDot').classList.toggle('on', connected);
+            document.getElementById('wsStatusText').textContent = text;
+            const badge = document.getElementById('wsStatusBadge');
+            badge.textContent = connected ? 'מחובר' : 'מנותק';
+            badge.classList.toggle('connected', connected);
+            document.getElementById('btnWsSend').disabled = !connected;
+        }
+
+        async function wsSendToTcp() {
+            const input = document.getElementById('wsMsg');
+            const msg = input.value.trim();
+            if (!msg || !wsReady || !signalRConnection) return;
+
+            try {
+                await signalRConnection.invoke('SendToTcp', msg);
+                appendLog('wsLog', `📤 [שלחתי] ${msg}`, 'entry-client');
+                input.value = '';
+                msgSent++;
+                document.getElementById('statSent').textContent = msgSent;
+            } catch (err) {
+                appendLog('wsLog', `❌ שגיאה בשליחה: ${err.message}`, 'entry-error');
+            }
+        }
+
+        // ──────────────────────────────────────────────
+        //  עזרי לוג ומקלדת
+        // ──────────────────────────────────────────────
+
         function appendLog(boxId, text, cls = 'entry-default') {
             const box = document.getElementById(boxId);
+            if (!box) return;
             const line = document.createElement('div');
             line.className = cls;
             line.textContent = text;
@@ -474,10 +407,10 @@
         }
 
         function clearLog(boxId) {
-            document.getElementById(boxId).innerHTML = '';
+            const box = document.getElementById(boxId);
+            if (box) box.innerHTML = '';
         }
 
-        // Enter key
         document.getElementById('broadcastMsg').addEventListener('keydown', e => {
             if (e.key === 'Enter') broadcastMessage();
         });
@@ -485,10 +418,87 @@
             if (e.key === 'Enter') wsSendToTcp();
         });
 
-        // Init
-        startWs();
+        // ──────────────────────────────────────────────
+        //  אתחול ראשוני מידי
+        // ──────────────────────────────────────────────
+        refreshStatus();
+        loadTcpLog();
         setInterval(refreshStatus, 4000);
-        } // end initApp
+
+        // ──────────────────────────────────────────────
+        //  טעינת SignalR ברקע
+        // ──────────────────────────────────────────────
+        function loadSignalRScript(src, onSuccess, onFail) {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = onSuccess;
+            script.onerror = onFail;
+            document.head.appendChild(script);
+        }
+
+        function startSignalRConnection() {
+            if (typeof signalR === 'undefined') return;
+
+            signalRConnection = new signalR.HubConnectionBuilder()
+                .withUrl(`${API_BASE}/osihub`, {
+                    transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
+                })
+                .withAutomaticReconnect([0, 1000, 3000, 5000])
+                .configureLogging(signalR.LogLevel.Warning)
+                .build();
+
+            signalRConnection.on('TcpLog', (msg) => {
+                const cls = msg.includes('שגיאה') || msg.includes('ERROR') ? 'entry-error'
+                          : msg.includes('התחבר') ? 'entry-info'
+                          : msg.includes('Broadcast') || msg.includes('קיבלתי') ? 'entry-server'
+                          : 'entry-default';
+                appendLog('tcpLog', msg, cls);
+                appendLog('wsLog', `📡 ${msg}`, 'entry-server');
+                msgReceived++;
+                document.getElementById('statMessages').textContent = msgReceived;
+                refreshStatus();
+            });
+
+            signalRConnection.on('ReceivePacket', (layer, data) => {
+                appendLog('wsLog', `📦 [OSI] ${layer}: ${data}`, 'entry-client');
+            });
+
+            signalRConnection.onreconnecting(() => {
+                setWsStatus(false, 'מתחבר מחדש...');
+                wsReady = false;
+            });
+            signalRConnection.onreconnected(() => {
+                setWsStatus(true, 'מחובר');
+                wsReady = true;
+                refreshStatus();
+            });
+            signalRConnection.onclose((err) => {
+                setWsStatus(false, 'מנותק');
+                wsReady = false;
+                appendLog('wsLog', `❌ חיבור נסגר. ${err || ''}`, 'entry-error');
+            });
+
+            signalRConnection.start()
+                .then(() => {
+                    wsReady = true;
+                    setWsStatus(true, 'מחובר');
+                    appendLog('wsLog', '✅ WebSocket מחובר בהצלחה!', 'entry-info');
+                    refreshStatus();
+                })
+                .catch((err) => {
+                    wsReady = false;
+                    setWsStatus(false, 'שגיאת חיבור');
+                    appendLog('wsLog', `❌ שגיאה בהתחברות SignalR: ${err}`, 'entry-error');
+                    setTimeout(startSignalRConnection, 3000);
+                });
+        }
+
+        // ניסיון טעינה מקומית ולאחריו CDN
+        loadSignalRScript('signalr.min.js', startSignalRConnection, () => {
+            loadSignalRScript('https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js', startSignalRConnection, () => {
+                appendLog('wsLog', '❌ שגיאה בטעינת ספריית SignalR.', 'entry-error');
+            });
+        });
     </script>
 </body>
 </html>
