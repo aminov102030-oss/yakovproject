@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using Npgsql;
 using Microsoft.AspNetCore.SignalR;
 using BCrypt.Net;
+using MyLoginProject;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -456,8 +457,53 @@ app.MapPost("/api/tcp/send", async (TcpSendRequest req, TcpServerService tcpServ
     return Results.Ok(new { success = true, message = $"ההודעה נשלחה ל-{sent} לקוח/לקוחות." });
 });
 
-// 14. WebSocket (TCP-Client) – חיבור ושליחה דרך SignalR מהדפדפן
-// הדפדפן מתחבר לדף tcp.html, לוחץ 'שלח' –> SignalR Hub שולח ל-TCP server.
+// 14. TCP Client Simulator (MySocket) – חיבור לקוח לבדיקה בלחיצת כפתור בדפדפן
+MySocket? simulatedClient = null;
+
+app.MapGet("/api/tcp/client/status", () =>
+{
+    bool isConnected = simulatedClient != null && simulatedClient.Connected;
+    return Results.Ok(new { connected = isConnected });
+});
+
+app.MapPost("/api/tcp/client/connect", () =>
+{
+    if (simulatedClient != null && simulatedClient.Connected)
+        return Results.Ok(new { success = true, message = "לקוח TCP כבר מחובר לשרת." });
+
+    simulatedClient?.Dispose();
+    simulatedClient = new MySocket();
+    bool ok = simulatedClient.Connect("127.0.0.1", 9000);
+    if (ok)
+        return Results.Ok(new { success = true, message = "לקוח TCP (MySocket) התחבר בהצלחה לשרת בפורט 9000!" });
+
+    return Results.BadRequest(new { success = false, message = "לא ניתן להתחבר לשרת TCP. ודא ששרת ה-TCP פועל." });
+});
+
+app.MapPost("/api/tcp/client/disconnect", () =>
+{
+    if (simulatedClient != null)
+    {
+        simulatedClient.Dispose();
+        simulatedClient = null;
+        return Results.Ok(new { success = true, message = "לקוח ה-TCP נותק בהצלחה מהשרת." });
+    }
+    return Results.Ok(new { success = true, message = "אין לקוח מחובר כרגע." });
+});
+
+app.MapPost("/api/tcp/client/send", (TcpSendRequest req) =>
+{
+    if (simulatedClient == null || !simulatedClient.Connected)
+        return Results.BadRequest(new { success = false, message = "לקוח ה-TCP אינו מחובר. לחץ על 'חבר לקוח' תחילה." });
+
+    if (string.IsNullOrWhiteSpace(req.Message))
+        return Results.BadRequest(new { success = false, message = "ההודעה ריקה." });
+
+    byte[] bytes = Encoding.UTF8.GetBytes(req.Message + "\n");
+    simulatedClient.UnderlyingSocket?.Send(bytes);
+
+    return Results.Ok(new { success = true, message = $"ההודעה נשלחה בהצלחה מהלקוח לשרת: {req.Message}" });
+});
 
 #endregion
 
