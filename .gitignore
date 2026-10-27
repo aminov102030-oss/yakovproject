@@ -10,3 +10,7 @@ MyLoginProject/obj/
 *.user
 *.suo
 *.userprefs
+
+## Python
+__pycache__/
+*.pyc
