@@ -257,9 +257,10 @@
 
     <script>
         // תמיכה ב-Live Server (פורט 5500) ושרת ASP.NET (פורט 5025)
+        const currentHost = window.location.hostname || 'localhost';
         const API_BASE = (window.location.port === '5025' || window.location.port === '')
             ? ''
-            : 'http://localhost:5025';
+            : `${window.location.protocol}//${currentHost}:5025`;
 
         let msgReceived = 0;
         let msgSent = 0;
@@ -440,11 +441,9 @@
             if (typeof signalR === 'undefined') return;
 
             signalRConnection = new signalR.HubConnectionBuilder()
-                .withUrl(`${API_BASE}/osihub`, {
-                    transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
-                })
+                .withUrl(`${API_BASE}/osihub`)
                 .withAutomaticReconnect([0, 1000, 3000, 5000])
-                .configureLogging(signalR.LogLevel.Warning)
+                .configureLogging(signalR.LogLevel.Information)
                 .build();
 
             signalRConnection.on('TcpLog', (msg) => {

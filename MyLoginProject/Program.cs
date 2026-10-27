@@ -10,14 +10,15 @@ using BCrypt.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// הגדרת CORS שמאפשרת פניות מכל מקור
+// הגדרת CORS שמאפשרת פניות מכל מקור, כולל תמיכה ב-SignalR WebSockets ו-Credentials
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
