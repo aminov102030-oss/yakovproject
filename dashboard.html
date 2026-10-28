@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>לוח בקרה ראשי - OSI Simulator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            direction: rtl;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* סרגל עליון / Navbar */
+        .navbar {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .navbar-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 18px;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+        }
+
+        .navbar-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-greeting {
+            font-size: 14px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .user-greeting span {
+            color: #4f46e5;
+            font-weight: 700;
+        }
+
+        .btn-logout {
+            padding: 7px 14px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            color: #475569;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-logout:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        /* תוכן מרכזי */
+        .container {
+            max-width: 980px;
+            margin: 32px auto;
+            padding: 0 20px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .welcome-header {
+            margin-bottom: 28px;
+        }
+
+        .welcome-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .welcome-header p {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        /* ── כרטיס סטטוס המערכת (תואם 100% לתמונה) ── */
+        .status-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 10px 28px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            margin-bottom: 32px;
+        }
+
+        .status-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .status-table tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .status-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .status-table td {
+            padding: 18px 8px;
+            font-size: 16px;
+            vertical-align: middle;
+        }
+
+        /* עמודת ימין: שמות השדות (עברית) */
+        .status-label {
+            text-align: right;
+            color: #475569;
+            font-weight: 700;
+            width: 45%;
+        }
+
+        /* עמודת שמאל: ערכים (תואם לתמונה) */
+        .status-value {
+            text-align: left;
+            font-weight: 700;
+            color: #0f172a;
+            font-family: inherit;
+        }
+
+        /* עיגול סטטוס אדום / ירוק */
+        .indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dot-wrapper {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .dot-wrapper.red {
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .dot-wrapper.green {
+            background: rgba(16, 185, 129, 0.18);
+        }
+
+        .dot-core {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-core.red {
+            background: #ef4444;
+        }
+
+        .dot-core.green {
+            background: #10b981;
+        }
+
+        .text-red {
+            color: #ef4444;
+            font-weight: 700;
+        }
+
+        .text-green {
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        .port-num {
+            font-size: 19px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── כרטיסי ניווט מהירים (פאנל משתמשים ו-TCP Socket) ── */
+        .section-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .action-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+            border-color: #cbd5e1;
+        }
+
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 4px;
+            background: transparent;
+            transition: background 0.2s;
+        }
+
+        .action-card.card-users:hover::before {
+            background: #6366f1;
+        }
+
+        .action-card.card-socket:hover::before {
+            background: #0ea5e9;
+        }
+
+        .card-header-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .icon-users {
+            background: #ede9fe;
+            color: #6366f1;
+        }
+
+        .icon-socket {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .card-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+
+        .btn-users {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-users:hover {
+            background: #4f46e5;
+        }
+
+        .btn-socket {
+            background: #0ea5e9;
+            color: white;
+        }
+
+        .btn-socket:hover {
+            background: #0284c7;
+        }
+
+        @media (max-width: 768px) {
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+            .status-table td {
+                font-size: 14px;
+                padding: 14px 4px;
+            }
+            .navbar {
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- סרגל עליון -->
+    <header class="navbar">
+        <div class="navbar-brand">
+            <div class="navbar-logo">O</div>
+            <div class="navbar-title">OSI Simulator & Network Hub</div>
+        </div>
+        <div class="navbar-user">
+            <div class="user-greeting">שלום, <span id="displayUserName">מנהל מערכת</span></div>
+            <a href="login.html" class="btn-logout" onclick="sessionStorage.clear()">יציאה</a>
+        </div>
+    </header>
+
+    <!-- תוכן ראשי -->
+    <main class="container">
+        
+        <div class="welcome-header">
+            <h1>לוח בקרה וניהול מערכת</h1>
+            <p>מבט כולל על סטטוס התקשורת, מסד הנתונים וקיצורי דרך מהירים לפאנלים</p>
+        </div>
+
+        <!-- כרטיס סטטוס מערכתי (זהה בדיוק לתמונה המבוקשת) -->
+        <section class="status-card">
+            <table class="status-table">
+                <tbody>
+                    <!-- 1. סטטוס שרת (Socket) -->
+                    <tr>
+                        <td class="status-value">
+                            <div class="indicator" id="socketIndicator">
+                                <span class="text-red" id="socketStatusText">השרת מנותק</span>
+                                <div class="dot-wrapper red" id="socketDotWrapper">
+                                    <div class="dot-core red" id="socketDot"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="status-label">סטטוס שרת (Socket)</td>
+                    </tr>
+
+                    <!-- 2. פרוטוקול תקשורת -->
+                    <tr>
+                        <td class="status-value" id="protocolVal">WebSocket (TCP)</td>
+                        <td class="status-label">פרוטוקול תקשורת</td>
+                    </tr>
+
+                    <!-- 3. סוג מסד נתונים -->
+                    <tr>
+                        <td class="status-value" id="dbTypeVal">PostgreSQL</td>
+                        <td class="status-label">סוג מסד נתונים</td>
+                    </tr>
+
+                    <!-- 4. מצב מסד נתונים -->
+                    <tr>
+                        <td class="status-value">
+                            <div class="indicator" id="dbIndicator">
+                                <span class="text-green" id="dbStatusText">מחובר ותקין</span>
+                                <div class="dot-wrapper green" id="dbDotWrapper">
+                                    <div class="dot-core green" id="dbDot"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="status-label">מצב מסד נתונים</td>
+                    </tr>
+
+                    <!-- 5. פורט האזנה -->
+                    <tr>
+                        <td class="status-value port-num" id="portVal">5057</td>
+                        <td class="status-label">פורט האזנה</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- כרטיסי ניווט לפאנל משתמשים ול-Socket TCP -->
+        <h2 class="section-title">⚡ קיצורי דרך ופעולות מערכת</h2>
+
+        <div class="actions-grid">
+
+            <!-- כרטיס 1: פאנל משתמשים -->
+            <a href="admin.html" class="action-card card-users">
+                <div>
+                    <div class="card-header-row">
+                        <div class="card-icon icon-users">👥</div>
+                        <div class="card-title">פאנל משתמשים</div>
+                    </div>
+                    <div class="card-desc">
+                        צפייה בכלל המשתמשים הרשומים במסד PostgreSQL, סטטוס אימות במייל ומחיקת משתמשים.
+                    </div>
+                </div>
+                <div class="card-btn btn-users">
+                    כניסה לפאנל משתמשים ←
+                </div>
+            </a>
+
+            <!-- כרטיס 2: סימולטור Socket TCP -->
+            <a href="tcp.html" class="action-card card-socket">
+                <div>
+                    <div class="card-header-row">
+                        <div class="card-icon icon-socket">🔌</div>
+                        <div class="card-title">Socket & TCP Simulator</div>
+                    </div>
+                    <div class="card-desc">
+                        ניהול והפעלת שרת TCP (פורט 9000), חיבור לקוח לבדיקה (MySocket), שידור הודעות ו-WebSocket.
+                    </div>
+                </div>
+                <div class="card-btn btn-socket">
+                    כניסה לסימולטור TCP Socket ←
+                </div>
+            </a>
+
+        </div>
+
+    </main>
+
+    <script>
+        // תמיכה ב-Live Server (פורט 5500) ובשרת ASP.NET (פורט 5025)
+        const currentHost = window.location.hostname || 'localhost';
+        const API_BASE = (window.location.port === '5025' || window.location.port === '')
+            ? ''
+            : `${window.location.protocol}//${currentHost}:5025`;
+
+        // הצגת שם המשתמש המחובר מה-sessionStorage
+        const savedName = sessionStorage.getItem('userName');
+        if (savedName) {
+            document.getElementById('displayUserName').textContent = savedName;
+        }
+
+        async function fetchSystemStatus() {
+            try {
+                const res = await fetch(`${API_BASE}/api/system/status`);
+                if (!res.ok) throw new Error("HTTP error " + res.status);
+                const data = await res.json();
+
+                // 1. סוקט (Socket)
+                const socketText = document.getElementById('socketStatusText');
+                const socketDot = document.getElementById('socketDot');
+                const socketDotWrapper = document.getElementById('socketDotWrapper');
+
+                if (data.socketRunning) {
+                    socketText.textContent = "פועל ומאזין";
+                    socketText.className = "text-green";
+                    socketDot.className = "dot-core green";
+                    socketDotWrapper.className = "dot-wrapper green";
+                } else {
+                    socketText.textContent = "השרת מנותק";
+                    socketText.className = "text-red";
+                    socketDot.className = "dot-core red";
+                    socketDotWrapper.className = "dot-wrapper red";
+                }
+
+                // 2. פרוטוקול
+                document.getElementById('protocolVal').textContent = data.protocol || "WebSocket (TCP)";
+
+                // 3. מסד נתונים
+                document.getElementById('dbTypeVal').textContent = data.dbType || "PostgreSQL";
+
+                // 4. מצב מסד נתונים
+                const dbText = document.getElementById('dbStatusText');
+                const dbDot = document.getElementById('dbDot');
+                const dbDotWrapper = document.getElementById('dbDotWrapper');
+
+                if (data.dbConnected) {
+                    dbText.textContent = "מחובר ותקין";
+                    dbText.className = "text-green";
+                    dbDot.className = "dot-core green";
+                    dbDotWrapper.className = "dot-wrapper green";
+                } else {
+                    dbText.textContent = "שגיאת חיבור";
+                    dbText.className = "text-red";
+                    dbDot.className = "dot-core red";
+                    dbDotWrapper.className = "dot-wrapper red";
+                }
+
+                // 5. פורט האזנה
+                const activePort = window.location.port || data.listenPort || "5057";
+                document.getElementById('portVal').textContent = activePort;
+
+            } catch (err) {
+                console.warn("Could not fetch live system status, displaying fallback info:", err);
+            }
+        }
+
+        // טעינה ראשונית ורענון כל 4 שניות
+        fetchSystemStatus();
+        setInterval(fetchSystemStatus, 4000);
+    </script>
+</body>
+</html>

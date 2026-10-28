@@ -241,8 +241,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    if (data.fullname) sessionStorage.setItem('userName', data.fullname);
                     alert(data.message || "התחברת בהצלחה!");
-                    window.location.href = '/dashboard';
+                    window.location.href = window.location.port === '5025' ? '/dashboard' : 'dashboard.html';
                 } else {
                     alert(data.message || "שגיאה בפרטי ההתחברות.");
                 }

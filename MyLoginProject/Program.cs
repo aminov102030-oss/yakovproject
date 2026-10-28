@@ -505,6 +505,38 @@ app.MapPost("/api/tcp/client/send", (TcpSendRequest req) =>
     return Results.Ok(new { success = true, message = $"ההודעה נשלחה בהצלחה מהלקוח לשרת: {req.Message}" });
 });
 
+// 15. System Status – מידע מערכתי מקיף לדאשבורד (תואם לתמונה)
+app.MapGet("/api/system/status", async (TcpServerService tcpService) =>
+{
+    bool dbConnected = false;
+    try
+    {
+        using var connection = new NpgsqlConnection(connString);
+        await connection.OpenAsync();
+        dbConnected = true;
+    }
+    catch
+    {
+        dbConnected = false;
+    }
+
+    return Results.Ok(new
+    {
+        socketRunning = tcpService.IsRunning,
+        socketStatus = tcpService.IsRunning ? "השרת פעיל ומאזין" : "השרת מנותק",
+        protocol = "WebSocket (TCP)",
+        dbType = "PostgreSQL",
+        dbConnected = dbConnected,
+        dbStatus = dbConnected ? "מחובר ותקין" : "שגיאת חיבור למסד",
+        listenPort = "5025",
+        tcpPort = tcpService.Port,
+        connectedClients = tcpService.ConnectedClients
+    });
+});
+
+// ניתוב ישיר לנתיב /dashboard שמגיש את dashboard.html
+app.MapGet("/dashboard", () => Results.Redirect("/dashboard.html"));
+
 #endregion
 
 // הגדרת נתיב (Endpoint) לסוקטים של סימולטור ה-OSI
