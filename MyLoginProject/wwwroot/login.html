@@ -236,19 +236,22 @@
             fetch(`${API_BASE}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email: email.trim(), password })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            .then(async response => {
+                const data = await response.json().catch(() => ({}));
+                if (response.ok && data.success) {
                     if (data.fullname) sessionStorage.setItem('userName', data.fullname);
                     alert(data.message || "התחברת בהצלחה!");
                     window.location.href = window.location.port === '5025' ? '/dashboard' : 'dashboard.html';
                 } else {
-                    alert(data.message || "שגיאה בפרטי ההתחברות.");
+                    alert(data.message || "אימייל או סיסמה שגויים.");
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                alert("שגיאת חיבור לשרת. ודא שהשרת פועל ברקע.");
+            });
         }
     </script>
 </body>

@@ -270,7 +270,7 @@ app.MapPost("/api/auth/login", async (LoginRequest req) =>
         }
 
         string fullname = reader.IsDBNull(0) ? "" : reader.GetString(0);
-        return Results.Ok(new { success = true, message = $"ברוך הבא {fullname}!" });
+        return Results.Ok(new { success = true, fullname = fullname, message = $"ברוך הבא {fullname}!" });
     }
 
     return Results.BadRequest(new { success = false, message = "אימייל או סיסמה שגויים." });
