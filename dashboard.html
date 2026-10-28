@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>לוח בקרה ראשי - OSI Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
@@ -12,19 +13,22 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f8fafc;
-            color: #0f172a;
+            font-family: 'Assistant', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            color: #f1f5f9;
             direction: rtl;
             min-height: 100vh;
             display: flex;
+            overflow-x: hidden;
         }
 
-        /* ── תפריט צדדי (Sidebar) ── */
+        /* ── תפריט צדדי (Sidebar) מעוצב בסגנון זכוכית Dark/Glassmorphism ── */
         .sidebar {
-            width: 270px;
-            background: #ffffff;
-            border-left: 1px solid #e2e8f0;
+            width: 290px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -33,57 +37,111 @@
             bottom: 0;
             right: 0;
             z-index: 100;
-            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.02);
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.4);
             transition: all 0.3s;
         }
 
         .sidebar-top {
-            padding: 24px 20px;
+            padding: 28px 22px;
         }
 
-        .sidebar-brand {
+        /* ── אזור הלוגו בתפריט: בדיוק כמו במסך ההתחברות והתמונה! ── */
+        .sidebar-brand-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 20px 16px;
+            text-align: center;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2), inset 0 0 15px rgba(255, 255, 255, 0.02);
+        }
+
+        .sidebar-brand-box::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #818cf8, #38bdf8, transparent);
+        }
+
+        /* שכבות ה-OSI המונפשות ממסך הכניסה */
+        .osi-layers-icon {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin: 0 auto 14px auto;
+            align-items: center;
+            width: fit-content;
+        }
+
+        .osi-layers-icon span {
+            display: block;
+            height: 4px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #818cf8, #38bdf8);
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+        }
+
+        .osi-layers-icon span:nth-child(1) { width: 34px; opacity: 0.6; }
+        .osi-layers-icon span:nth-child(2) { width: 46px; opacity: 0.8; }
+        .osi-layers-icon span:nth-child(3) { width: 58px; opacity: 1.0; background: linear-gradient(90deg, #6366f1, #a855f7); }
+        .osi-layers-icon span:nth-child(4) { width: 46px; opacity: 0.8; }
+        .osi-layers-icon span:nth-child(5) { width: 34px; opacity: 0.6; }
+
+        .brand-title-row {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid #f1f5f9;
-            margin-bottom: 24px;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .sidebar-logo {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #4f46e5, #06b6d4);
-            border-radius: 12px;
+        /* אייקון ה-'O' עם הגרדיאנט המדויק מהתמונה */
+        .brand-badge-o {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
+            font-family: 'Inter', sans-serif;
             font-weight: 800;
-            font-size: 20px;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
             flex-shrink: 0;
         }
 
-        .sidebar-title h2 {
-            font-size: 16px;
+        .brand-text h2 {
+            font-family: 'Inter', 'Assistant', sans-serif;
+            font-size: 18px;
             font-weight: 800;
-            color: #0f172a;
-            line-height: 1.2;
+            color: #ffffff;
+            letter-spacing: -0.2px;
+            text-align: right;
+            line-height: 1.1;
         }
 
-        .sidebar-title span {
+        .brand-text span {
             font-size: 11px;
-            color: #64748b;
-            font-weight: 500;
+            color: #94a3b8;
+            font-weight: 600;
+            display: block;
+            margin-top: 3px;
+            letter-spacing: 0.3px;
         }
 
+        /* כפתורי ניווט בסיידבר */
         .menu-heading {
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #94a3b8;
+            letter-spacing: 1px;
+            color: #64748b;
             margin-bottom: 12px;
             padding-right: 8px;
         }
@@ -91,22 +149,21 @@
         .sidebar-nav {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
         }
 
         .nav-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 14px;
-            border-radius: 10px;
-            text-decoration: none;
-            color: #475569;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s ease;
+            padding: 13px 16px;
+            border-radius: 12px;
+            color: #94a3b8;
+            font-size: 15px;
+            font-weight: 700;
+            transition: all 0.25s ease;
             cursor: pointer;
-            border: none;
+            border: 1px solid transparent;
             background: transparent;
             width: 100%;
             text-align: right;
@@ -114,18 +171,20 @@
         }
 
         .nav-item:hover {
-            background: #f1f5f9;
-            color: #0f172a;
+            background: rgba(255, 255, 255, 0.05);
+            color: #f8fafc;
+            transform: translateX(-3px);
         }
 
         .nav-item.active {
-            background: #eef2ff;
-            color: #4f46e5;
-            font-weight: 700;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(6, 182, 212, 0.15) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
         }
 
         .nav-icon {
-            font-size: 18px;
+            font-size: 19px;
             width: 24px;
             display: flex;
             justify-content: center;
@@ -133,57 +192,60 @@
 
         .badge-nav {
             margin-right: auto;
-            background: #f1f5f9;
-            color: #64748b;
+            background: rgba(255, 255, 255, 0.08);
+            color: #cbd5e1;
             font-size: 11px;
-            padding: 2px 7px;
-            border-radius: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
             font-weight: 700;
         }
 
         .nav-item.active .badge-nav {
-            background: #4f46e5;
+            background: #6366f1;
             color: white;
         }
 
-        /* תחתית תפריט הצד */
+        /* חלק תחתון של התפריט */
         .sidebar-bottom {
-            padding: 20px;
-            border-top: 1px solid #f1f5f9;
-            background: #fafafa;
+            padding: 22px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(10, 15, 30, 0.5);
         }
 
         .user-profile {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
         .user-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: #e2e8f0;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
-            font-weight: 700;
-            color: #475569;
-            border: 2px solid #ffffff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+            font-size: 17px;
+            font-weight: 800;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
         }
 
         .user-info-text h4 {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 700;
-            color: #1e293b;
+            color: #ffffff;
         }
 
         .user-info-text p {
             font-size: 11px;
-            color: #64748b;
+            color: #10b981;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .btn-logout {
@@ -192,11 +254,11 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 9px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            color: #ef4444;
+            padding: 11px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 10px;
+            color: #f87171;
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
@@ -205,40 +267,45 @@
         }
 
         .btn-logout:hover {
-            background: #fef2f2;
-            border-color: #fecaca;
+            background: rgba(239, 68, 68, 0.2);
+            color: #ffffff;
+            border-color: #ef4444;
         }
 
-        /* ── אזור תוכן ראשי (Main Content) ── */
+        /* ── אזור תוכן ראשי (Main Wrapper) ── */
         .main-wrapper {
-            margin-right: 270px;
+            margin-right: 290px;
             flex: 1;
-            padding: 36px 44px;
+            padding: 40px 50px;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
         .page-header {
-            margin-bottom: 28px;
+            margin-bottom: 32px;
         }
 
         .page-header h1 {
-            font-size: 26px;
+            font-size: 32px;
             font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 6px;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .page-header p {
-            font-size: 14px;
-            color: #64748b;
+            font-size: 15px;
+            color: #94a3b8;
         }
 
-        /* טאבים בתוך אותו עמוד */
+        /* טאבים */
         .tab-content {
             display: none;
-            animation: fadeIn 0.2s ease-in-out;
+            animation: fadeIn 0.25s ease-in-out;
         }
 
         .tab-content.active {
@@ -246,17 +313,16 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
+            from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── 1. כרטיס סטטוס המערכת (תואם 100% לתמונה) ── */
+        /* ── כרטיס סטטוס המערכת – מעוצב, יוקרתי ותואם 100% לתמונה ── */
         .status-card {
             background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 12px 32px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            border-radius: 20px;
+            padding: 16px 36px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
             max-width: 900px;
         }
 
@@ -274,8 +340,8 @@
         }
 
         .status-table td {
-            padding: 20px 8px;
-            font-size: 16px;
+            padding: 22px 10px;
+            font-size: 17px;
             vertical-align: middle;
         }
 
@@ -288,19 +354,20 @@
 
         .status-value {
             text-align: left;
-            font-weight: 700;
+            font-weight: 800;
             color: #0f172a;
+            font-family: 'Inter', 'Assistant', sans-serif;
         }
 
         .indicator {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .dot-wrapper {
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
@@ -324,66 +391,70 @@
 
         .dot-core.red {
             background: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
         }
 
         .dot-core.green {
             background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
         }
 
         .text-red {
             color: #ef4444;
-            font-weight: 700;
+            font-weight: 800;
         }
 
         .text-green {
             color: #10b981;
-            font-weight: 700;
+            font-weight: 800;
         }
 
         .port-num {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 800;
             color: #0f172a;
             letter-spacing: 0.5px;
         }
 
-        /* ── 2. פאנל ניהול משתמשים ── */
+        /* ── כרטיס פאנל משתמשים ── */
         .content-card {
             background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 28px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-            max-width: 1000px;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+            max-width: 1050px;
+            color: #0f172a;
         }
 
         .table-header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .table-header-row h3 {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 800;
-            color: #1e293b;
+            color: #0f172a;
         }
 
         .btn-refresh {
-            background-color: #6366f1;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
             color: white;
             border: none;
-            padding: 9px 16px;
-            border-radius: 8px;
+            padding: 10px 20px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 14px;
             transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
         .btn-refresh:hover {
-            background-color: #4f46e5;
+            opacity: 0.92;
+            transform: translateY(-1px);
         }
 
         .data-table {
@@ -393,9 +464,9 @@
 
         .data-table th, .data-table td {
             border: 1px solid #e2e8f0;
-            padding: 12px 16px;
+            padding: 14px 18px;
             text-align: right;
-            font-size: 14px;
+            font-size: 15px;
         }
 
         .data-table th {
@@ -410,59 +481,73 @@
 
         .badge-status {
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 6px;
+            padding: 5px 10px;
+            border-radius: 8px;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 700;
         }
 
         .badge-success { background-color: #dcfce7; color: #166534; }
         .badge-warning { background-color: #fef9c3; color: #854d0e; }
 
         .btn-delete {
-            background-color: #ef4444;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
+            background-color: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            padding: 7px 14px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            transition: background 0.2s;
+            font-size: 13px;
+            font-weight: 700;
+            transition: all 0.2s;
         }
 
         .btn-delete:hover {
             background-color: #dc2626;
+            color: white;
         }
 
-        @media (max-width: 900px) {
-            .sidebar { width: 220px; }
-            .main-wrapper { margin-right: 220px; padding: 24px; }
+        @media (max-width: 950px) {
+            .sidebar { width: 240px; }
+            .main-wrapper { margin-right: 240px; padding: 28px; }
         }
 
-        @media (max-width: 680px) {
+        @media (max-width: 720px) {
             body { flex-direction: column; }
-            .sidebar { position: relative; width: 100%; border-left: none; border-bottom: 1px solid #e2e8f0; }
-            .main-wrapper { margin-right: 0; padding: 18px; }
+            .sidebar { position: relative; width: 100%; border-left: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
+            .main-wrapper { margin-right: 0; padding: 20px; }
+            .status-card { padding: 12px 18px; }
+            .status-table td { font-size: 14px; padding: 16px 6px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ── תפריט צדדי קבוע (Sidebar) ── -->
+    <!-- ── תפריט צדדי (Sidebar) ── -->
     <aside class="sidebar">
         <div class="sidebar-top">
             
-            <!-- לוגו ומיתוג -->
-            <div class="sidebar-brand">
-                <div class="sidebar-logo">O</div>
-                <div class="sidebar-title">
-                    <h2>OSI Simulator</h2>
-                    <span>Network & System Hub</span>
+            <!-- לוגו והתמונה בדיוק כמו במסך הכניסה -->
+            <div class="sidebar-brand-box">
+                <!-- שכבות OSI מונפשות -->
+                <div class="osi-layers-icon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <!-- מיתוג O עם הטקסט מהתמונה -->
+                <div class="brand-title-row">
+                    <div class="brand-badge-o">O</div>
+                    <div class="brand-text">
+                        <h2>OSI Simulator</h2>
+                        <span>Network & System Hub</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- תפריט ניווט בלחיצה (ללא מעבר עמוד) -->
+            <!-- תפריט ניווט בלחיצה ללא ריענון עמוד -->
             <div class="menu-heading">תפריט ניווט</div>
             <nav class="sidebar-nav">
                 
@@ -488,7 +573,7 @@
                 <div class="user-avatar" id="avatarInitial">מ</div>
                 <div class="user-info-text">
                     <h4 id="sidebarUserName">מנהל מערכת</h4>
-                    <p>מחובר ומאומת</p>
+                    <p>● מחובר ומאומת</p>
                 </div>
             </div>
             <a href="login.html" class="btn-logout" onclick="sessionStorage.clear()">
@@ -502,11 +587,11 @@
     <main class="main-wrapper">
         
         <!-- ════════════════════════════════════════════════ -->
-        <!--  טאב 1: לוח בקרה ראשי (טבלת סטטוס בדיוק לפי התמונה) -->
+        <!--  טאב 1: לוח בקרה ראשי (טבלת סטטוס תואמת 100% לתמונה) -->
         <!-- ════════════════════════════════════════════════ -->
         <div id="tab-dashboard" class="tab-content active">
             <header class="page-header">
-                <h1>לוח בקרה וניהול מערכת</h1>
+                <h1>📊 לוח בקרה וניהול מערכת</h1>
                 <p>מבט כולל על סטטוס התקשורת, מסד הנתונים והפורטים בזמן אמת</p>
             </header>
 
@@ -566,7 +651,7 @@
         <!-- ════════════════════════════════════════════════ -->
         <div id="tab-users" class="tab-content">
             <header class="page-header">
-                <h1>פאנל ניהול משתמשים</h1>
+                <h1>👥 פאנל ניהול משתמשים</h1>
                 <p>צפייה בכלל המשתמשים הרשומים במסד PostgreSQL, סטטוס אימות ומחיקה</p>
             </header>
 
@@ -582,12 +667,12 @@
                             <th style="width: 70px;">ID</th>
                             <th>שם מלא</th>
                             <th>אימייל</th>
-                            <th style="width: 150px;">סטטוס אימות</th>
-                            <th style="width: 110px;">פעולות</th>
+                            <th style="width: 160px;">סטטוס אימות</th>
+                            <th style="width: 120px;">פעולות</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
-                        <tr><td colspan="5" style="text-align: center; color: #64748b;">טוען נתונים...</td></tr>
+                        <tr><td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">טוען נתונים...</td></tr>
                     </tbody>
                 </table>
             </section>
@@ -610,7 +695,7 @@
         }
 
         // ──────────────────────────────────────────────
-        //  מנגנון החלפת טאבים (ללא מעבר עמוד)
+        //  החלפת טאבים ללא מעבר עמוד
         // ──────────────────────────────────────────────
         function switchTab(tabName, element) {
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
@@ -686,7 +771,7 @@
         // ──────────────────────────────────────────────
         async function loadUsers() {
             const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b;">טוען משתמשים...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 20px;">טוען משתמשים...</td></tr>';
 
             try {
                 const response = await fetch(`${API_BASE}/api/admin/users`);
@@ -695,7 +780,7 @@
                 tbody.innerHTML = '';
 
                 if (!users || users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">אין משתמשים רשומים במערכת.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">אין משתמשים רשומים במערכת.</td></tr>';
                     return;
                 }
 
@@ -706,7 +791,7 @@
 
                     tbody.innerHTML += `
                         <tr>
-                            <td>${user.id}</td>
+                            <td><b>#${user.id}</b></td>
                             <td>${user.fullname || '-'}</td>
                             <td>${user.email}</td>
                             <td>${statusBadge}</td>
@@ -737,9 +822,7 @@
             }
         }
 
-        // ──────────────────────────────────────────────
-        //  אתחול ראשוני
-        // ──────────────────────────────────────────────
+        // אתחול
         fetchSystemStatus();
         setInterval(fetchSystemStatus, 4000);
     </script>
