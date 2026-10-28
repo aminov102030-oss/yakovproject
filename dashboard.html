@@ -235,7 +235,7 @@
             color: #64748b;
         }
 
-        /* טאבים / עמודים בתוך אותו דאשבורד */
+        /* טאבים בתוך אותו עמוד */
         .tab-content {
             display: none;
             animation: fadeIn 0.2s ease-in-out;
@@ -347,14 +347,14 @@
             letter-spacing: 0.5px;
         }
 
-        /* ── 2. עיצוב פאנל משתמשים בתוך הדאשבורד ── */
+        /* ── 2. פאנל ניהול משתמשים ── */
         .content-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 16px;
             padding: 28px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-            max-width: 1100px;
+            max-width: 1000px;
         }
 
         .table-header-row {
@@ -435,181 +435,9 @@
             background-color: #dc2626;
         }
 
-        /* ── 3. עיצוב עמוד Socket TCP בתוך הדאשבורד ── */
-        .tcp-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            max-width: 1100px;
-        }
-
-        .tcp-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-        }
-
-        .tcp-card.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .tcp-card h3 {
-            font-size: 16px;
-            font-weight: 800;
-            color: #1e293b;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tag-badge {
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-weight: 700;
-        }
-
-        .tag-tcp { background: #e0f2fe; color: #0284c7; }
-        .tag-client { background: #dcfce7; color: #166534; }
-        .tag-ws { background: #f3e8ff; color: #7e22ce; }
-
-        .status-line {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 16px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-
-        .btn-action {
-            padding: 9px 18px;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-action:hover:not(:disabled) {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        .btn-action:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .btn-green { background: #10b981; color: white; }
-        .btn-red { background: #ef4444; color: white; }
-        .btn-blue { background: #6366f1; color: white; }
-        .btn-purple { background: #8b5cf6; color: white; }
-
-        .input-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 14px;
-        }
-
-        .input-group input[type="text"] {
-            flex: 1;
-            padding: 9px 14px;
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 13px;
-            outline: none;
-            direction: rtl;
-        }
-
-        .input-group input[type="text"]:focus {
-            border-color: #6366f1;
-            background: #ffffff;
-        }
-
-        .log-display {
-            background: #0f172a;
-            border: 1px solid #1e293b;
-            border-radius: 10px;
-            padding: 14px;
-            height: 240px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.7;
-            direction: ltr;
-            text-align: left;
-            color: #cbd5e1;
-        }
-
-        .log-display .entry-server  { color: #38bdf8; }
-        .log-display .entry-client  { color: #34d399; }
-        .log-display .entry-error   { color: #f87171; }
-        .log-display .entry-info    { color: #86efac; }
-        .log-display .entry-default { color: #cbd5e1; }
-
-        .tcp-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .tcp-stat-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 12px;
-            text-align: center;
-        }
-
-        .tcp-stat-box .stat-val {
-            font-size: 26px;
-            font-weight: 800;
-            color: #4f46e5;
-        }
-
-        .tcp-stat-box .stat-lbl {
-            font-size: 11px;
-            color: #64748b;
-            margin-top: 2px;
-            font-weight: 600;
-        }
-
-        .notice-box {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 10px;
-            padding: 12px 14px;
-            font-size: 12px;
-            color: #166534;
-            line-height: 1.8;
-        }
-
-        .notice-box code {
-            background: #dcfce7;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-weight: bold;
-        }
-
         @media (max-width: 900px) {
             .sidebar { width: 220px; }
             .main-wrapper { margin-right: 220px; padding: 24px; }
-            .tcp-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 680px) {
@@ -638,7 +466,7 @@
             <div class="menu-heading">תפריט ניווט</div>
             <nav class="sidebar-nav">
                 
-                <!-- 1. לוח בקרה -->
+                <!-- 1. לוח בקרה ראשי -->
                 <button class="nav-item active" onclick="switchTab('dashboard', this)">
                     <span class="nav-icon">📊</span>
                     <span>לוח בקרה ראשי</span>
@@ -649,13 +477,6 @@
                 <button class="nav-item" onclick="switchTab('users', this)">
                     <span class="nav-icon">👥</span>
                     <span>פאנל משתמשים</span>
-                </button>
-
-                <!-- 3. סימולטור Socket TCP -->
-                <button class="nav-item" onclick="switchTab('tcp', this)">
-                    <span class="nav-icon">🔌</span>
-                    <span>Socket & TCP</span>
-                    <span class="badge-nav">9000</span>
                 </button>
 
             </nav>
@@ -772,97 +593,6 @@
             </section>
         </div>
 
-        <!-- ════════════════════════════════════════════════ -->
-        <!--  טאב 3: סימולטור Socket TCP (נטען בתוך הדאשבורד) -->
-        <!-- ════════════════════════════════════════════════ -->
-        <div id="tab-tcp" class="tab-content">
-            <header class="page-header">
-                <h1>סימולטור Socket & TCP</h1>
-                <p>ניהול והפעלת שרת TCP בפורט 9000, חיבור לקוח לבדיקה ושידור הודעות בזמן אמת</p>
-            </header>
-
-            <div class="tcp-grid">
-                
-                <!-- שרת TCP -->
-                <div class="tcp-card">
-                    <h3>🖥️ שרת TCP <span class="tag-badge tag-tcp">Port 9000</span></h3>
-
-                    <div class="status-line">
-                        <div class="dot-core red" id="tcpDot"></div>
-                        <span id="tcpStatus">טוען סטטוס...</span>
-                    </div>
-
-                    <div class="tcp-stats">
-                        <div class="tcp-stat-box">
-                            <div class="stat-val" id="statClients">0</div>
-                            <div class="stat-lbl">לקוחות מחוברים</div>
-                        </div>
-                        <div class="tcp-stat-box">
-                            <div class="stat-val" id="statMessages">0</div>
-                            <div class="stat-lbl">הודעות שהתקבלו</div>
-                        </div>
-                        <div class="tcp-stat-box">
-                            <div class="stat-val" id="statSent">0</div>
-                            <div class="stat-lbl">הודעות ששודרו</div>
-                        </div>
-                    </div>
-
-                    <div class="btn-group">
-                        <button class="btn-action btn-green" id="btnStart" onclick="startTcpServer()">▶ הפעל שרת</button>
-                        <button class="btn-action btn-red" id="btnStop" onclick="stopTcpServer()" disabled>■ עצור שרת</button>
-                        <button class="btn-action btn-blue" onclick="refreshTcpStatus()">↻ רענן</button>
-                    </div>
-
-                    <div class="input-group">
-                        <input type="text" id="broadcastMsg" placeholder="שידור הודעה מהשרת לכל הלקוחות המחוברים..." />
-                        <button class="btn-action btn-blue" onclick="broadcastMessage()">📡 שדר</button>
-                    </div>
-                </div>
-
-                <!-- לקוח TCP לבדיקה (MySocket) -->
-                <div class="tcp-card">
-                    <h3>💻 לקוח TCP לבדיקה <span class="tag-badge tag-client">MySocket.cs</span></h3>
-
-                    <div class="status-line">
-                        <div class="dot-core red" id="clientDot"></div>
-                        <span id="clientStatusText">מנותק ⭕</span>
-                    </div>
-
-                    <p style="font-size: 13px; color: #64748b; margin-bottom: 16px; line-height: 1.6;">
-                        סימולטור של לקוח TCP מבוסס מחלקת <code>MySocket</code>.<br>
-                        בלחיצה על "חבר לקוח", הלקוח מתחבר לפורט 9000 ומונה הלקוחות יעלה ל-1!
-                    </p>
-
-                    <div class="btn-group">
-                        <button class="btn-action btn-green" id="btnConnectClient" onclick="connectClient()">🟢 חבר לקוח TCP</button>
-                        <button class="btn-action btn-red" id="btnDisconnectClient" onclick="disconnectClient()" disabled>🔴 נתק לקוח</button>
-                    </div>
-
-                    <div class="input-group">
-                        <input type="text" id="clientMsg" placeholder="הקלד הודעה לשליחה מלקוח ה-TCP אל השרת..." />
-                        <button class="btn-action btn-green" id="btnClientSend" onclick="sendFromClient()" disabled>💬 שלח לשרת</button>
-                    </div>
-
-                    <div class="notice-box">
-                        <b>בדיקה מהירה:</b> לחץ "חבר לקוח TCP" ← מונה הלקוחות יהפוך ל-<b>1</b> ← שלח הודעה וצפה בלוג למטה!
-                    </div>
-                </div>
-
-                <!-- לוג תעבורה בזמן אמת (Full Width) -->
-                <div class="tcp-card full-width">
-                    <h3>📋 לוג תעבורת רשת בזמן אמת (TCP Network Traffic Log)</h3>
-                    <div class="btn-group">
-                        <button class="btn-action btn-blue" onclick="clearTcpLog()">🗑 נקה לוג</button>
-                        <button class="btn-action btn-blue" onclick="loadTcpLog()">↻ טען לוג מלא מהשרת</button>
-                    </div>
-                    <div class="log-display" id="tcpLog">
-                        <div class="entry-info">הלוג יופיע כאן בזמן אמת...</div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
     </main>
 
     <!-- ── Scripts ── -->
@@ -883,22 +613,15 @@
         //  מנגנון החלפת טאבים (ללא מעבר עמוד)
         // ──────────────────────────────────────────────
         function switchTab(tabName, element) {
-            // הסרת active מכל הכפתורים והטאבים
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
 
-            // הפעלת הטאב והכפתור הנבחר
             if (element) element.classList.add('active');
             const targetTab = document.getElementById(`tab-${tabName}`);
             if (targetTab) targetTab.classList.add('active');
 
-            // פעולות ספציפיות בעת פתיחה
             if (tabName === 'users') {
                 loadUsers();
-            } else if (tabName === 'tcp') {
-                refreshTcpStatus();
-                refreshClientStatus();
-                loadTcpLog();
             } else if (tabName === 'dashboard') {
                 fetchSystemStatus();
             }
@@ -1013,191 +736,6 @@
                 alert('שגיאה במחיקת המשתמש');
             }
         }
-
-        // ──────────────────────────────────────────────
-        //  3. סימולטור Socket TCP
-        // ──────────────────────────────────────────────
-        let msgSent = 0;
-
-        async function startTcpServer() {
-            const btn = document.getElementById('btnStart');
-            btn.disabled = true;
-            try {
-                const res = await fetch(`${API_BASE}/api/tcp/start`, { method: 'POST' });
-                const data = await res.json();
-                appendTcpLog(data.message, data.success ? 'entry-info' : 'entry-error');
-                await refreshTcpStatus();
-                await fetchSystemStatus();
-            } catch (err) {
-                appendTcpLog(`❌ שגיאה: ${err.message}`, 'entry-error');
-                btn.disabled = false;
-            }
-        }
-
-        async function stopTcpServer() {
-            const btn = document.getElementById('btnStop');
-            btn.disabled = true;
-            try {
-                const res = await fetch(`${API_BASE}/api/tcp/stop`, { method: 'POST' });
-                const data = await res.json();
-                appendTcpLog(data.message, data.success ? 'entry-info' : 'entry-error');
-                await refreshTcpStatus();
-                await refreshClientStatus();
-                await fetchSystemStatus();
-            } catch (err) {
-                appendTcpLog(`❌ שגיאה: ${err.message}`, 'entry-error');
-                btn.disabled = false;
-            }
-        }
-
-        async function broadcastMessage() {
-            const input = document.getElementById('broadcastMsg');
-            const msg = input.value.trim();
-            if (!msg) return;
-
-            try {
-                const res = await fetch(`${API_BASE}/api/tcp/send`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: msg })
-                });
-                const data = await res.json();
-                appendTcpLog(data.message, data.success ? 'entry-info' : 'entry-error');
-                if (data.success) {
-                    input.value = '';
-                    msgSent++;
-                    document.getElementById('statSent').textContent = msgSent;
-                }
-            } catch (err) {
-                appendTcpLog(`❌ שגיאה: ${err.message}`, 'entry-error');
-            }
-        }
-
-        async function refreshTcpStatus() {
-            try {
-                const res = await fetch(`${API_BASE}/api/tcp/status`);
-                const data = await res.json();
-                const running = data.running;
-
-                const dot = document.getElementById('tcpDot');
-                dot.className = running ? "dot-core green" : "dot-core red";
-
-                document.getElementById('tcpStatus').textContent = running
-                    ? `פועל ומאזין ✅ (פורט ${data.port} | ${data.clients} מחוברים)`
-                    : 'כבוי ⭕';
-
-                document.getElementById('btnStart').disabled = running;
-                document.getElementById('btnStop').disabled = !running;
-                document.getElementById('statClients').textContent = data.clients;
-            } catch (err) {
-                document.getElementById('tcpStatus').textContent = 'שגיאת חיבור לשרת ❌';
-            }
-        }
-
-        async function connectClient() {
-            const btn = document.getElementById('btnConnectClient');
-            btn.disabled = true;
-            try {
-                const res = await fetch(`${API_BASE}/api/tcp/client/connect`, { method: 'POST' });
-                const data = await res.json();
-                appendTcpLog(`💻 [לקוח] ${data.message}`, data.success ? 'entry-client' : 'entry-error');
-                await refreshTcpStatus();
-                await refreshClientStatus();
-            } catch (err) {
-                appendTcpLog(`❌ שגיאה: ${err.message}`, 'entry-error');
-                btn.disabled = false;
-            }
-        }
-
-        async function disconnectClient() {
-            const btn = document.getElementById('btnDisconnectClient');
-            btn.disabled = true;
-            try {
-                const res = await fetch(`${API_BASE}/api/tcp/client/disconnect`, { method: 'POST' });
-                const data = await res.json();
-                appendTcpLog(`💻 [לקוח] ${data.message}`, 'entry-info');
-                await refreshTcpStatus();
-                await refreshClientStatus();
-            } catch (err) {
-                appendTcpLog(`❌ שגיאה: ${err.message}`, 'entry-error');
-                btn.disabled = false;
-            }
-        }
-
-        async function sendFromClient() {
-            const input = document.getElementById('clientMsg');
-            const msg = input.value.trim();
-            if (!msg) return;
-
-            try {
-                const res = await fetch(`${API_BASE}/api/tcp/client/send`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: msg })
-                });
-                const data = await res.json();
-                appendTcpLog(`💻 [לקוח ← שרת] שלחתי: ${msg}`, 'entry-client');
-                if (data.success) {
-                    input.value = '';
-                }
-            } catch (err) {
-                appendTcpLog(`❌ שגיאה: ${err.message}`, 'entry-error');
-            }
-        }
-
-        async function refreshClientStatus() {
-            try {
-                const res = await fetch(`${API_BASE}/api/tcp/client/status`);
-                const data = await res.json();
-                const connected = data.connected;
-
-                const dot = document.getElementById('clientDot');
-                dot.className = connected ? "dot-core green" : "dot-core red";
-
-                document.getElementById('clientStatusText').textContent = connected ? 'מחובר לשרת TCP ✅' : 'מנותק ⭕';
-                document.getElementById('btnConnectClient').disabled = connected;
-                document.getElementById('btnDisconnectClient').disabled = !connected;
-                document.getElementById('btnClientSend').disabled = !connected;
-            } catch { }
-        }
-
-        async function loadTcpLog() {
-            try {
-                const res = await fetch(`${API_BASE}/api/tcp/status`);
-                const data = await res.json();
-                const box = document.getElementById('tcpLog');
-                box.innerHTML = '';
-                if (data.log && data.log.length > 0) {
-                    data.log.forEach(line => appendTcpLog(line));
-                } else {
-                    appendTcpLog('אין רשומות בלוג עדיין.', 'entry-info');
-                }
-            } catch (err) {
-                appendTcpLog(`❌ שגיאה בטעינת הלוג: ${err.message}`, 'entry-error');
-            }
-        }
-
-        function appendTcpLog(text, cls = 'entry-default') {
-            const box = document.getElementById('tcpLog');
-            if (!box) return;
-            const line = document.createElement('div');
-            line.className = cls;
-            line.textContent = text;
-            box.appendChild(line);
-            box.scrollTop = box.scrollHeight;
-        }
-
-        function clearTcpLog() {
-            const box = document.getElementById('tcpLog');
-            if (box) box.innerHTML = '';
-        }
-
-        document.getElementById('broadcastMsg').addEventListener('keydown', e => {
-            if (e.key === 'Enter') broadcastMessage();
-        });
-        document.getElementById('clientMsg').addEventListener('keydown', e => {
-            if (e.key === 'Enter') sendFromClient();
-        });
 
         // ──────────────────────────────────────────────
         //  אתחול ראשוני
