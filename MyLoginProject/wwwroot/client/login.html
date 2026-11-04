@@ -247,11 +247,8 @@
                     
                     alert(data.message || "התחברת בהצלחה!");
                     
-                    if (data.role === 'Admin') {
-                        window.location.href = window.location.port === '5025' ? '/admin' : '../admin/dashboard.html';
-                    } else {
-                        window.location.href = window.location.port === '5025' ? '/client' : 'dashboard.html';
-                    }
+                    // כניסת לקוח מובילה תמיד ישירות ללוח הבקרה של הלקוח
+                    window.location.href = window.location.port === '5025' ? '/client/dashboard.html' : 'dashboard.html';
                 } else {
                     alert(data.message || "אימייל או סיסמה שגויים.");
                 }

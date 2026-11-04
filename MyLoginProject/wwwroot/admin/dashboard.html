@@ -425,7 +425,7 @@
                     <p>● הרשאת מנהל מלאה</p>
                 </div>
             </div>
-            <a href="../client/login.html" class="btn-logout" onclick="sessionStorage.clear()">
+            <a href="login.html" class="btn-logout" onclick="sessionStorage.clear()">
                 <span>🚪</span>
                 <span>התנתק מהמערכת</span>
             </a>
@@ -507,9 +507,9 @@
             document.getElementById('avatarInitial').textContent = savedName.trim().charAt(0);
         }
 
-        if (role && role !== 'Admin') {
-            alert('אין לך הרשאת מנהל! הנך מועבר לדשבורד הלקוח.');
-            window.location.href = '../client/dashboard.html';
+        if (!role || role !== 'Admin') {
+            alert('גישה מוגנת: יש להתחבר עם משתמש בעל הרשאת מנהל.');
+            window.location.href = window.location.port === '5025' ? '/admin/login' : 'login.html';
         }
 
         function switchAdminTab(tabName, element) {

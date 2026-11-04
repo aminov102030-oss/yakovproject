@@ -48,12 +48,18 @@ app.MapAdminEndpoints();    // פאנל מנהל: ניהול משתמשים, ס�
 app.MapClientEndpoints();   // שירותי לקוח: פרופיל וסטטוס אישי
 app.MapSystemEndpoints();   // סטטוס מערכתי (DB + Socket)
 
-// 6. ניתובים מהירים לדפי ה-UI
+// 6. ניתובים מהירים לדפי ה-UI (הפרדה מלאה בקישורים נפרדים)
 app.MapGet("/", () => Results.Redirect("/client/login.html"));
 app.MapGet("/login", () => Results.Redirect("/client/login.html"));
+
+// קישורי לקוח (Client Portal)
 app.MapGet("/client", () => Results.Redirect("/client/dashboard.html"));
-app.MapGet("/admin", () => Results.Redirect("/admin/dashboard.html"));
+app.MapGet("/client/login", () => Results.Redirect("/client/login.html"));
 app.MapGet("/dashboard", () => Results.Redirect("/client/dashboard.html"));
+
+// קישורי מנהל (Admin Portal)
+app.MapGet("/admin", () => Results.Redirect("/admin/dashboard.html"));
+app.MapGet("/admin/login", () => Results.Redirect("/admin/login.html"));
 
 // 7. נתיב ה-SignalR Hub
 app.MapHub<OsiHub>("/osihub");
