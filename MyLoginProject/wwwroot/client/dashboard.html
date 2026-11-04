@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>לוח בקרה אישי - OSI Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Assistant', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            direction: rtl;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* ── תפריט צדדי של הלקוח (Client Sidebar) ── */
+        .sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-left: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            z-index: 100;
+            box-shadow: -2px 0 12px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s;
+        }
+
+        .sidebar-top {
+            padding: 24px 20px;
+        }
+
+        .sidebar-brand-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 18px 14px;
+            text-align: center;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .osi-layers-icon {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 0 auto 12px auto;
+            align-items: center;
+            width: fit-content;
+        }
+
+        .osi-layers-icon span {
+            display: block;
+            height: 4px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #6366f1, #38bdf8);
+        }
+
+        .osi-layers-icon span:nth-child(1) { width: 30px; opacity: 0.6; }
+        .osi-layers-icon span:nth-child(2) { width: 42px; opacity: 0.8; }
+        .osi-layers-icon span:nth-child(3) { width: 54px; opacity: 1.0; background: linear-gradient(90deg, #4f46e5, #06b6d4); }
+        .osi-layers-icon span:nth-child(4) { width: 42px; opacity: 0.8; }
+        .osi-layers-icon span:nth-child(5) { width: 30px; opacity: 0.6; }
+
+        .brand-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .brand-badge-o {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 16px;
+            box-shadow: 0 3px 10px rgba(79, 70, 229, 0.25);
+            flex-shrink: 0;
+        }
+
+        .brand-text h2 {
+            font-family: 'Inter', 'Assistant', sans-serif;
+            font-size: 17px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.2px;
+            text-align: right;
+            line-height: 1.1;
+        }
+
+        .brand-text span {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            display: block;
+            margin-top: 3px;
+        }
+
+        .menu-heading {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            padding-right: 8px;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+            background: transparent;
+            width: 100%;
+            text-align: right;
+            font-family: inherit;
+        }
+
+        .nav-item:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .nav-item.active {
+            background: #eef2ff;
+            color: #4f46e5;
+            font-weight: 700;
+            border-color: #e0e7ff;
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            width: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .sidebar-bottom {
+            padding: 20px;
+            border-top: 1px solid #f1f5f9;
+            background: #fafafa;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #e0e7ff;
+            color: #4f46e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+        }
+
+        .user-info-text h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .user-info-text p {
+            font-size: 11px;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 9px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            color: #ef4444;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        /* ── אזור תוכן ראשי (Main Wrapper) ── */
+        .main-wrapper {
+            margin-right: 280px;
+            flex: 1;
+            padding: 36px 44px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header p {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .status-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 12px 32px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            max-width: 900px;
+            margin-bottom: 24px;
+        }
+
+        .status-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .status-table tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .status-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .status-table td {
+            padding: 20px 8px;
+            font-size: 16px;
+            vertical-align: middle;
+        }
+
+        .status-label {
+            text-align: right;
+            color: #475569;
+            font-weight: 700;
+            width: 45%;
+        }
+
+        .status-value {
+            text-align: left;
+            font-weight: 700;
+            color: #0f172a;
+            font-family: 'Inter', 'Assistant', sans-serif;
+        }
+
+        .indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dot-wrapper {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .dot-wrapper.green { background: rgba(16, 185, 129, 0.18); }
+        .dot-wrapper.red { background: rgba(239, 68, 68, 0.15); }
+        .dot-core { width: 10px; height: 10px; border-radius: 50%; }
+        .dot-core.green { background: #10b981; }
+        .dot-core.red { background: #ef4444; }
+        .text-green { color: #10b981; font-weight: 700; }
+        .text-red { color: #ef4444; font-weight: 700; }
+
+        .client-welcome-box {
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            border-radius: 16px;
+            padding: 24px 30px;
+            color: white;
+            margin-bottom: 24px;
+            max-width: 900px;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
+        }
+
+        .client-welcome-box h2 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .client-welcome-box p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar { width: 220px; }
+            .main-wrapper { margin-right: 220px; padding: 24px; }
+        }
+
+        @media (max-width: 680px) {
+            body { flex-direction: column; }
+            .sidebar { position: relative; width: 100%; border-left: none; border-bottom: 1px solid #e2e8f0; }
+            .main-wrapper { margin-right: 0; padding: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── סיידבר לקוח ── -->
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <div class="sidebar-brand-box">
+                <div class="osi-layers-icon">
+                    <span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <div class="brand-title-row">
+                    <div class="brand-badge-o">O</div>
+                    <div class="brand-text">
+                        <h2>OSI Simulator</h2>
+                        <span>אזור משתמש (Client)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-heading">תפריט לקוח</div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active">
+                    <span class="nav-icon">📊</span>
+                    <span>לוח בקרה אישי</span>
+                </button>
+            </nav>
+        </div>
+
+        <div class="sidebar-bottom">
+            <div class="user-profile">
+                <div class="user-avatar" id="avatarInitial">מ</div>
+                <div class="user-info-text">
+                    <h4 id="sidebarUserName">משתמש רגיל</h4>
+                    <p>● לקוח מחובר</p>
+                </div>
+            </div>
+            <a href="login.html" class="btn-logout" onclick="sessionStorage.clear()">
+                <span>🚪</span>
+                <span>התנתק מהמערכת</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- ── תוכן מרכזי של הלקוח ── -->
+    <main class="main-wrapper">
+        <div class="client-welcome-box">
+            <h2 id="welcomeTitle">שלום, לקוח יקר! 👋</h2>
+            <p>ברוך הבא לאזור האישי שלך בסימולטור OSI. כאן תוכל לראות את סטטוס התקשורת מול השרת.</p>
+        </div>
+
+        <header class="page-header">
+            <h1>📡 סטטוס תקשורת אישי</h1>
+            <p>מעקב אחר זמינות שרת התקשורת, חיבורי Socket ומצב המערכת</p>
+        </header>
+
+        <section class="status-card">
+            <table class="status-table">
+                <tbody>
+                    <tr>
+                        <td class="status-value">
+                            <div class="indicator" id="socketIndicator">
+                                <span class="text-green" id="socketStatusText">פועל ומאזין</span>
+                                <div class="dot-wrapper green" id="socketDotWrapper">
+                                    <div class="dot-core green" id="socketDot"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="status-label">סטטוס שרת (Socket)</td>
+                    </tr>
+                    <tr>
+                        <td class="status-value" id="protocolVal">WebSocket (TCP)</td>
+                        <td class="status-label">פרוטוקול תקשורת</td>
+                    </tr>
+                    <tr>
+                        <td class="status-value">
+                            <div class="indicator" id="dbIndicator">
+                                <span class="text-green" id="dbStatusText">מחובר ותקין</span>
+                                <div class="dot-wrapper green" id="dbDotWrapper">
+                                    <div class="dot-core green" id="dbDot"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="status-label">מצב מסד נתונים</td>
+                    </tr>
+                    <tr>
+                        <td class="status-value" id="portVal" style="font-size: 20px; font-weight: 800;">5057</td>
+                        <td class="status-label">פורט האזנה</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        const API_BASE = (window.location.port === '5025' || window.location.port === '')
+            ? ''
+            : `${window.location.protocol}//${window.location.hostname || 'localhost'}:5025`;
+
+        const savedName = sessionStorage.getItem('userName');
+        if (savedName) {
+            document.getElementById('sidebarUserName').textContent = savedName;
+            document.getElementById('welcomeTitle').textContent = `שלום, ${savedName}! 👋`;
+            document.getElementById('avatarInitial').textContent = savedName.trim().charAt(0);
+        }
+
+        async function fetchSystemStatus() {
+            try {
+                const res = await fetch(`${API_BASE}/api/system/status`);
+                if (!res.ok) return;
+                const data = await res.json();
+
+                const socketText = document.getElementById('socketStatusText');
+                const socketDot = document.getElementById('socketDot');
+                const socketDotWrapper = document.getElementById('socketDotWrapper');
+
+                if (data.socketRunning) {
+                    socketText.textContent = "פועל ומאזין";
+                    socketText.className = "text-green";
+                    socketDot.className = "dot-core green";
+                    socketDotWrapper.className = "dot-wrapper green";
+                } else {
+                    socketText.textContent = "השרת מנותק";
+                    socketText.className = "text-red";
+                    socketDot.className = "dot-core red";
+                    socketDotWrapper.className = "dot-wrapper red";
+                }
+
+                document.getElementById('protocolVal').textContent = data.protocol || "WebSocket (TCP)";
+                document.getElementById('portVal').textContent = data.listenPort || "5057";
+            } catch (err) {
+                console.warn("Client status fetch error:", err);
+            }
+        }
+
+        fetchSystemStatus();
+        setInterval(fetchSystemStatus, 4000);
+    </script>
+</body>
+</html>

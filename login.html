@@ -242,8 +242,16 @@
                 const data = await response.json().catch(() => ({}));
                 if (response.ok && data.success) {
                     if (data.fullname) sessionStorage.setItem('userName', data.fullname);
+                    if (data.role) sessionStorage.setItem('userRole', data.role);
+                    sessionStorage.setItem('userEmail', email.trim());
+                    
                     alert(data.message || "התחברת בהצלחה!");
-                    window.location.href = window.location.port === '5025' ? '/dashboard' : 'dashboard.html';
+                    
+                    if (data.role === 'Admin') {
+                        window.location.href = window.location.port === '5025' ? '/admin' : '../admin/dashboard.html';
+                    } else {
+                        window.location.href = window.location.port === '5025' ? '/client' : 'dashboard.html';
+                    }
                 } else {
                     alert(data.message || "אימייל או סיסמה שגויים.");
                 }
